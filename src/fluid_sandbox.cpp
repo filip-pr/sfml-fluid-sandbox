@@ -34,10 +34,20 @@ void FluidSandbox::update(float dt)
 
 void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-    sf::CircleShape circle(PARTICLE_RADIUS);
-    for (auto &&particle : particles_)
+    sf::VertexArray particles(sf::PrimitiveType::Triangles, particles_.size()*6);
+    for (size_t i = 0; i < particles_.size(); i++)
     {
-        circle.setPosition(particle.position);
-        target.draw(circle, states);
+        particles[i*6].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particles[i*6+1].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particles[i*6+2].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particles[i*6+3].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particles[i*6+4].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particles[i*6+5].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
+        for (size_t j = 0; j < 6; j++)
+        {
+            particles[i*6+j].color = sf::Color::White;
+        }
+
     }
+    target.draw(particles, states);
 }

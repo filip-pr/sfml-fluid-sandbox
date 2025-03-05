@@ -40,10 +40,11 @@ int main()
 
         if (counter % FRAMERATE_LIMIT == 0)
         {
-            std::cout << "FPS: " << FRAMERATE_LIMIT / clock.restart().asSeconds() << std::endl;
+            std::cout << "FPS: " << FRAMERATE_LIMIT / clock.restart().asSeconds()
+                    << ", Particle count: " << sandbox.particle_count() << std::endl;
             counter = 0;
         }
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && counter % 10 ==0)
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
             sandbox.add_particle({static_cast<float>(mouse_position.x), static_cast<float>(mouse_position.y)});

@@ -19,6 +19,8 @@ public:
     void add_particle(sf::Vector2f position, sf::Vector2f velocity) { particles_.emplace_back(position, velocity); }
     void add_particle(sf::Vector2f position) { particles_.emplace_back(position); }
 
+    size_t particle_count() const { return particles_.size(); }
+
     void resize(sf::Vector2u size) { size_ = size; }
 
     void update(float dt);
