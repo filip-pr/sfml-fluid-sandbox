@@ -36,23 +36,17 @@ int main()
                 window.setView(sf::View(sf::FloatRect({0, 0}, {static_cast<float>(resized->size.x), static_cast<float>(resized->size.y)})));
                 sandbox.resize({resized->size.x, resized->size.y});
             }
-            if (const auto *mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>())
-            {
-                if (mouseButtonPressed->button != sf::Mouse::Button::Left)
-                {
-                    continue;
-                }
-                sandbox.add_particle(
-                    window.mapPixelToCoords({mouseButtonPressed->position.x, mouseButtonPressed->position.y}),
-                    window.mapPixelToCoords({std::rand() % 20 - 10, std::rand() % 20 - 10})
-                );
-            }
         }
 
         if (counter % FRAMERATE_LIMIT == 0)
         {
             std::cout << "FPS: " << FRAMERATE_LIMIT / clock.restart().asSeconds() << std::endl;
             counter = 0;
+        }
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && counter % 10 ==0)
+        {
+            const auto mouse_position = sf::Mouse::getPosition(window);
+            sandbox.add_particle({static_cast<float>(mouse_position.x), static_cast<float>(mouse_position.y)});
         }
 
         sandbox.update(1.0f / FRAMERATE_LIMIT * SIMULATION_SPEED);
