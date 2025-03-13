@@ -4,9 +4,10 @@
 
 #include <SFML/Graphics.hpp>
 
-#include <vector>
+#include <deque>
 
 #include "particle.h"
+#include "spatial_hash_grid.h"
 
 constexpr float PARTICLE_RADIUS = 5;
 constexpr float GRAVITY = 9.8f;
@@ -16,8 +17,8 @@ class FluidSandbox : public sf::Drawable
 public:
     FluidSandbox(sf::Vector2u size) : size_(size) {}
 
-    void add_particle(sf::Vector2f position, sf::Vector2f velocity) { particles_.emplace_back(position, velocity); }
-    void add_particle(sf::Vector2f position) { particles_.emplace_back(position); }
+    void add_particle(sf::Vector2f position, sf::Vector2f velocity);
+    void add_particle(sf::Vector2f position);
 
     size_t particle_count() const { return particles_.size(); }
 
@@ -28,7 +29,8 @@ public:
 
 private:
     sf::Vector2u size_;
-    std::vector<Particle> particles_;
+    std::deque<Particle> particles_;
+    SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 2};
 };
 
 #endif
