@@ -29,9 +29,9 @@ inline std::vector<size_t> SpatialHashGrid::hash_cells(sf::Vector2f center, floa
     std::vector<size_t> keys;
 
     size_t min_cell_x = (center.x - radius) > 0 ? static_cast<size_t>(center.x - radius) / cell_size_ : 0;
-    size_t max_cell_x = static_cast<size_t>(center.x + radius) / cell_size_;
+    size_t max_cell_x = (center.x + radius) > 0 ? static_cast<size_t>(center.x + radius) / cell_size_ : 0;
     size_t min_cell_y = (center.y - radius) > 0 ? static_cast<size_t>(center.y - radius) / cell_size_ : 0;
-    size_t max_cell_y = static_cast<size_t>(center.y + radius) / cell_size_;
+    size_t max_cell_y = (center.y - radius) > 0 ? static_cast<size_t>(center.y + radius) / cell_size_ : 0;
 
     for (size_t x = min_cell_x; x <= max_cell_x; ++x)
     {
