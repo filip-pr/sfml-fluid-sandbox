@@ -1,6 +1,7 @@
 
 
 #include "fluid_sandbox.h"
+#include <algorithm>
 
 void FluidSandbox::add_particle(sf::Vector2f position, sf::Vector2f velocity)
 {
@@ -50,15 +51,19 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
     sf::VertexArray particle_vertices(sf::PrimitiveType::Triangles, particles_.size() * 6);
     for (size_t i = 0; i < particles_.size(); i++)
     {
-        particle_vertices[i * 6].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 1].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 2].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 3].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 4].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 5].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
+        auto &&particle = particles_[i];
+
+        auto neighbors = grid_.query(particle.position, PARTICLE_RADIUS * 2);
+
+        particle_vertices[i * 6].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 1].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 2].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 3].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 4].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 5].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
         for (size_t j = 0; j < 6; j++)
         {
-            particle_vertices[i * 6 + j].color = sf::Color::White;
+            particle_vertices[i * 6 + j].color = sf::Color(0, std::min(255, static_cast<int>(neighbors.size()*10)), 0);
         }
     }
 
