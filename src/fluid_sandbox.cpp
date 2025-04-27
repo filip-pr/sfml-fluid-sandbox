@@ -47,19 +47,39 @@ void FluidSandbox::update(float dt)
 
 void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-    sf::VertexArray particles(sf::PrimitiveType::Triangles, particles_.size() * 6);
+    sf::VertexArray particle_vertices(sf::PrimitiveType::Triangles, particles_.size() * 6);
     for (size_t i = 0; i < particles_.size(); i++)
     {
-        particles[i * 6].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particles[i * 6 + 1].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particles[i * 6 + 2].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        particles[i * 6 + 3].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particles[i * 6 + 4].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        particles[i * 6 + 5].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particle_vertices[i * 6].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 1].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 2].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 3].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 4].position = particles_[i].position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particle_vertices[i * 6 + 5].position = particles_[i].position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
         for (size_t j = 0; j < 6; j++)
         {
-            particles[i * 6 + j].color = sf::Color::White;
+            particle_vertices[i * 6 + j].color = sf::Color::White;
         }
     }
-    target.draw(particles, states);
+
+    auto highlight_particles = grid_.query(close_highlight_position, PARTICLE_RADIUS * 2);
+
+    sf::VertexArray highlight_particles_vertices(sf::PrimitiveType::Triangles, highlight_particles.size() * 6);
+
+    for (size_t i = 0; i < highlight_particles.size(); i++)
+    {
+        highlight_particles_vertices[i * 6].position = highlight_particles[i]->position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        highlight_particles_vertices[i * 6 + 1].position = highlight_particles[i]->position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        highlight_particles_vertices[i * 6 + 2].position = highlight_particles[i]->position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        highlight_particles_vertices[i * 6 + 3].position = highlight_particles[i]->position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
+        highlight_particles_vertices[i * 6 + 4].position = highlight_particles[i]->position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
+        highlight_particles_vertices[i * 6 + 5].position = highlight_particles[i]->position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
+        for (size_t j = 0; j < 6; j++)
+        {
+            highlight_particles_vertices[i * 6 + j].color = sf::Color::Red;
+        }
+    }
+
+    target.draw(particle_vertices, states);
+    target.draw(highlight_particles_vertices, states);
 }

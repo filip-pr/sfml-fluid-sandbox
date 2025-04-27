@@ -15,6 +15,8 @@ constexpr float GRAVITY = 9.8f;
 class FluidSandbox : public sf::Drawable
 {
 public:
+    sf::Vector2f close_highlight_position; // for debugging
+
     FluidSandbox(sf::Vector2u size) : size_(size) {}
 
     void add_particle(sf::Vector2f position, sf::Vector2f velocity);

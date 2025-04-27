@@ -41,13 +41,14 @@ int main()
         if (counter % FRAMERATE_LIMIT == 0)
         {
             std::cout << "FPS: " << FRAMERATE_LIMIT / clock.restart().asSeconds()
-                    << ", Particle count: " << sandbox.particle_count() << std::endl;
+                      << ", Particle count: " << sandbox.particle_count() << std::endl;
             counter = 0;
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            for (int i = 0; i < 10; i++){
+            for (int i = 0; i < 10; i++)
+            {
                 float velocity_x = (rand() % 100) / 10.0f - 5.0f;
                 float velocity_y = (rand() % 100) / 10.0f - 5.0f;
                 float x_offset = (rand() % 100) / 10.0f - 5.0f;
@@ -55,6 +56,10 @@ int main()
                 sandbox.add_particle({static_cast<float>(mouse_position.x) + x_offset, static_cast<float>(mouse_position.y) + y_offset}, {velocity_x, velocity_y});
             }
         }
+
+        auto mouse_position = sf::Mouse::getPosition(window);
+
+        sandbox.close_highlight_position = {static_cast<float>(mouse_position.x), static_cast<float>(mouse_position.y)};
 
         sandbox.update(1.0f / FRAMERATE_LIMIT * SIMULATION_SPEED);
         window.clear();
