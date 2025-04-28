@@ -8,12 +8,17 @@ struct Particle
 {
 public:
     sf::Vector2f position;
+    sf::Vector2f prev_position;
     sf::Vector2f velocity;
 
-    Particle(sf::Vector2f position) : position(position), velocity(0, 0) {}
-    Particle(sf::Vector2f position, sf::Vector2f velocity) : position(position), velocity(velocity) {}
+    Particle(sf::Vector2f position) : position(position), prev_position(position), velocity(0, 0) {}
+    Particle(sf::Vector2f position, sf::Vector2f velocity) : position(position), prev_position(position), velocity(velocity) {}
 
-    void update(float dt) { position += velocity * dt; }
+    void update(float dt)
+    {
+        prev_position = position;
+        position += velocity * dt;
+    }
 };
 
 #endif
