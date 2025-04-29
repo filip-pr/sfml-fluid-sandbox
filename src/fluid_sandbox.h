@@ -17,7 +17,7 @@ class FluidSandbox : public sf::Drawable
 public:
     sf::Vector2f close_highlight_position; // for debugging
 
-    FluidSandbox(sf::Vector2u size) : size_(size) {}
+    FluidSandbox(sf::Vector2u size, float dt) : size_(size), dt_(dt) {}
 
     void add_particle(sf::Vector2f position, sf::Vector2f velocity);
     void add_particle(sf::Vector2f position);
@@ -26,16 +26,17 @@ public:
 
     void resize(sf::Vector2u size) { size_ = size; }
 
-    void update(float dt);
+    void update();
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
 private:
     sf::Vector2u size_;
+    float dt_;
     std::vector<Particle> particles_;
     SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 2};
 
-    void apply_gravity(float dt);
-    void update_particles(float dt);
+    void apply_gravity();
+    void update_particles();
     void enforce_constraints();
 };
 #endif

@@ -18,7 +18,7 @@ int main()
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
     window.setFramerateLimit(FRAMERATE_LIMIT);
 
-    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT});
+    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, 1.0f / FRAMERATE_LIMIT * SIMULATION_SPEED);
 
     sf::Clock clock;
     int counter = 1;
@@ -61,7 +61,7 @@ int main()
 
         sandbox.close_highlight_position = {static_cast<float>(mouse_position.x), static_cast<float>(mouse_position.y)};
 
-        sandbox.update(1.0f / FRAMERATE_LIMIT * SIMULATION_SPEED);
+        sandbox.update();
         window.clear();
         window.draw(sandbox);
         window.display();

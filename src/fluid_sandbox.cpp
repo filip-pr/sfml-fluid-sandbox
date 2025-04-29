@@ -15,19 +15,19 @@ void FluidSandbox::add_particle(sf::Vector2f position)
     grid_.insert(&particles_.back());
 }
 
-void FluidSandbox::apply_gravity(float dt)
+void FluidSandbox::apply_gravity()
 {
     for (auto &&particle : particles_)
     {
-        particle.velocity.y += GRAVITY * dt;
+        particle.velocity.y += GRAVITY * dt_;
     }
 }
 
-void FluidSandbox::update_particles(float dt)
+void FluidSandbox::update_particles()
 {
     for (auto &&particle : particles_)
     {
-        particle.update(dt);
+        particle.update(dt_);
     }
 }
 
@@ -57,11 +57,11 @@ void FluidSandbox::enforce_constraints(){
     }
 }
 
-void FluidSandbox::update(float dt)
+void FluidSandbox::update()
 {
-    apply_gravity(dt);
+    apply_gravity();
     grid_.clear();
-    update_particles(dt);
+    update_particles();
     enforce_constraints();
     grid_.batch_insert(particles_);
 }
