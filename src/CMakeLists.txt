@@ -16,6 +16,7 @@ FetchContent_MakeAvailable(SFML)
 
 set(MY_EXE "fluid_simulation_sandbox")
 add_executable(${MY_EXE} "./main.cpp"
+    "./utils.h"
     "./particle.h"
     "./fluid_sandbox.h" "./fluid_sandbox.cpp"
     "./spatial_hash_grid.h" "./spatial_hash_grid.cpp"

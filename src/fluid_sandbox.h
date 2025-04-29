@@ -38,5 +38,6 @@ private:
     void apply_gravity();
     void update_particles();
     void enforce_constraints();
+    void apply_double_density_relaxation();
 };
 #endif

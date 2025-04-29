@@ -1,5 +1,7 @@
 
+#include "utils.h"
 #include "spatial_hash_grid.h"
+
 
 #include <cmath>
 
@@ -56,7 +58,7 @@ std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius
 
         for (const auto &particle : it->second)
         {
-            float distance = std::hypot(particle->position.x - center.x, particle->position.y - center.y);
+            float distance = utils::distance(center, particle->position);
             if (distance <= radius)
             {
                 result.push_back(particle);
