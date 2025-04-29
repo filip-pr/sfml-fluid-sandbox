@@ -18,7 +18,9 @@ public:
     SpatialHashGrid(size_t cell_size) : cell_size_(cell_size) {}
 
     void insert(Particle *particle);
+    void batch_insert(std::vector<Particle>& particles);
     void remove(Particle *particle);
+    void clear();
 
     std::vector<Particle *> query(sf::Vector2f center, float radius) const;
 

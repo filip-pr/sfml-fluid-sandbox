@@ -4,7 +4,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include <deque>
+#include <vector>
 
 #include "particle.h"
 #include "spatial_hash_grid.h"
@@ -31,8 +31,11 @@ public:
 
 private:
     sf::Vector2u size_;
-    std::deque<Particle> particles_;
+    std::vector<Particle> particles_;
     SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 2};
-};
 
+    void apply_gravity(float dt);
+    void update_particles(float dt);
+    void enforce_constraints();
+};
 #endif

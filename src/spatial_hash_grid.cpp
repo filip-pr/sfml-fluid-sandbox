@@ -66,3 +66,16 @@ std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius
 
     return result;
 }
+
+void SpatialHashGrid::clear()
+{
+    grid_.clear();
+}
+
+void SpatialHashGrid::batch_insert(std::vector<Particle>& particles) // TODO this could probably be optimized
+{
+    for (auto&& particle : particles)
+    {
+        insert(&particle);
+    }
+}
