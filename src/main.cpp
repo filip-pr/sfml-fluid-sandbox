@@ -15,7 +15,7 @@ constexpr unsigned int FRAMERATE_LIMIT = 60;
 int main()
 {
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
-    //window.setFramerateLimit(FRAMERATE_LIMIT);
+    window.setFramerateLimit(FRAMERATE_LIMIT);
 
     FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, 1);
 

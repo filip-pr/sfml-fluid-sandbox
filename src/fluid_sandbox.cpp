@@ -72,7 +72,7 @@ void FluidSandbox::apply_double_density_relaxation()
 {
     const float interaction_radius = 60.0f;
 
-    const float rest_density = 4.0f;
+    const float rest_density = 6.0f;
     const float stiffness = 0.5f;
     const float near_stiffness = 0.5f;
 

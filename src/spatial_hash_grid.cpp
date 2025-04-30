@@ -22,10 +22,8 @@ void SpatialHashGrid::remove(Particle *particle)
     throw std::runtime_error(PARTICLE_NOT_FOUND_ERROR_MESSAGE);
 }
 
-inline std::vector<size_t> SpatialHashGrid::hash_cells(sf::Vector2f center, float radius) const
+inline std::generator<size_t> SpatialHashGrid::hash_cells(sf::Vector2f center, float radius) const
 {
-    std::vector<size_t> keys;
-
     size_t min_cell_x = (center.x - radius) > 0 ? static_cast<size_t>(center.x - radius) / cell_size_ : 0;
     size_t max_cell_x = (center.x + radius) > 0 ? static_cast<size_t>(center.x + radius) / cell_size_ : 0;
     size_t min_cell_y = (center.y - radius) > 0 ? static_cast<size_t>(center.y - radius) / cell_size_ : 0;
@@ -35,10 +33,9 @@ inline std::vector<size_t> SpatialHashGrid::hash_cells(sf::Vector2f center, floa
     {
         for (size_t y = min_cell_y; y <= max_cell_y; ++y)
         {
-            keys.push_back(hash_cell(x, y));
+            co_yield hash_cell(x, y);
         }
     }
-    return keys;
 }
 
 std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius) const

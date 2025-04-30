@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <generator>
 
 #include "particle.h"
 
@@ -28,7 +29,7 @@ private:
 
     size_t hash(const sf::Vector2f &position) const;
     size_t hash_cell(size_t cell_x, size_t cell_y) const;
-    std::vector<size_t> hash_cells(sf::Vector2f center, float radius) const;
+    std::generator<size_t> hash_cells(sf::Vector2f center, float radius) const;
 };
 
 inline size_t SpatialHashGrid::hash(const sf::Vector2f &position) const
