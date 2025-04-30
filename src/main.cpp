@@ -63,7 +63,7 @@ int main()
             window_position = new_window_position;
         }
 
-        sandbox.update();
+        sandbox.update(1.0f, {0, 0.4f}, 60.0f, 6.0f, 0.5f, 0.5f);
         window.clear();
         window.draw(sandbox);
         window.display();

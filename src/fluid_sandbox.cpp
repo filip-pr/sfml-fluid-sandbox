@@ -6,56 +6,56 @@
 
 void FluidSandbox::add_particle(sf::Vector2f position, sf::Vector2f velocity)
 {
-    particle_colors_.emplace_back(sf::Color::White);
+    particle_pressures_.emplace_back(0.0f);
     particles_.emplace_back(position, velocity);
     grid_.insert(&particles_.back());
 }
 
 void FluidSandbox::add_particle(sf::Vector2f position)
 {
-    particle_colors_.emplace_back(sf::Color::White);
+    particle_pressures_.emplace_back(0.0f);
     particles_.emplace_back(position);
     grid_.insert(&particles_.back());
 }
 
-void FluidSandbox::add_particle_velocity(sf::Vector2f velocity){
+void FluidSandbox::add_particle_velocity(sf::Vector2f velocity)
+{
     for (auto &&particle : particles_)
     {
         particle.velocity += velocity;
     }
 }
 
-void FluidSandbox::update()
+void FluidSandbox::update(float dt, sf::Vector2f gravity, float interaction_radius, float rest_density, float stiffness, float near_stiffness)
 {
-    apply_gravity();
+    apply_gravity(dt, gravity);
     apply_viscosity();
-    move_particles();
+    move_particles(dt);
     adjust_springs();
     apply_spring_displacements();
-    do_double_density_relaxation();
+    do_double_density_relaxation(dt, interaction_radius, rest_density, stiffness, near_stiffness);
     resolve_collisions();
-    recalculate_velocity();
+    recalculate_velocity(dt);
 }
 
-void FluidSandbox::apply_gravity()
+void FluidSandbox::apply_gravity(float dt, sf::Vector2f gravity)
 {
     for (auto &&particle : particles_)
     {
-        particle.velocity.y += GRAVITY * dt_;
+        particle.velocity += gravity * dt;
     }
 }
 
 void FluidSandbox::apply_viscosity()
 {
-
 }
 
-void FluidSandbox::move_particles()
+void FluidSandbox::move_particles(float dt)
 {
     grid_.clear();
     for (auto &&particle : particles_)
     {
-        particle.update(dt_);
+        particle.update(dt);
     }
     grid_.batch_insert(particles_);
 }
@@ -68,16 +68,10 @@ void FluidSandbox::apply_spring_displacements()
 {
 }
 
-void FluidSandbox::do_double_density_relaxation()
+void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radius, float rest_density, float stiffness, float near_stiffness)
 {
-    const float interaction_radius = 60.0f;
-
-    const float rest_density = 6.0f;
-    const float stiffness = 0.5f;
-    const float near_stiffness = 0.5f;
-
     const float interaction_radius_sq = interaction_radius * interaction_radius;
-    const float dt_sq_half = 0.5f * dt_ * dt_;
+    const float dt_sq_half = 0.5f * dt * dt;
 
     size_t counter = 0;
 
@@ -110,8 +104,7 @@ void FluidSandbox::do_double_density_relaxation()
         float pressure = stiffness * (density - rest_density);
         float near_pressure = near_stiffness * near_density;
 
-        int pressure_color = std::clamp(static_cast<int>(128 - pressure * 50), 0, 255);
-        particle_colors_[counter] = sf::Color(pressure_color, pressure_color, 255);
+        particle_pressures_[counter] = pressure;
 
         sf::Vector2f total_displacement = {0.0f, 0.0f};
 
@@ -176,9 +169,9 @@ void FluidSandbox::resolve_collisions()
     }
 }
 
-void FluidSandbox::recalculate_velocity()
+void FluidSandbox::recalculate_velocity(float dt)
 {
-    const float inv_dt = 1.0f / dt_;
+    const float inv_dt = 1.0f / dt;
     for (auto &&particle : particles_)
     {
         particle.velocity = (particle.position - particle.prev_position) * inv_dt;
@@ -191,16 +184,19 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
     for (size_t i = 0; i < particles_.size(); i++)
     {
         auto &&particle = particles_[i];
+        float pressure = particle_pressures_[i];
+        float particle_size = std::max(15 + pressure * 5, 1.0f);
 
-        particle_vertices[i * 6].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 1].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 2].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 3].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 4].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        particle_vertices[i * 6 + 5].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
+        particle_vertices[i * 6].position = particle.position + sf::Vector2f(-particle_size, -particle_size);
+        particle_vertices[i * 6 + 1].position = particle.position + sf::Vector2f(particle_size, -particle_size);
+        particle_vertices[i * 6 + 2].position = particle.position + sf::Vector2f(particle_size, particle_size);
+        particle_vertices[i * 6 + 3].position = particle.position + sf::Vector2f(-particle_size, -particle_size);
+        particle_vertices[i * 6 + 4].position = particle.position + sf::Vector2f(particle_size, particle_size);
+        particle_vertices[i * 6 + 5].position = particle.position + sf::Vector2f(-particle_size, particle_size);
         for (size_t j = 0; j < 6; j++)
         {
-            particle_vertices[i * 6 + j].color = particle_colors_[i];
+            int pressure_color = std::clamp(static_cast<int>(128 - pressure * 50), 0, 255);
+            particle_vertices[i * 6 + j].color = sf::Color(pressure_color, pressure_color, 255);
         }
     }
 
