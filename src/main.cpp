@@ -11,7 +11,6 @@ constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 700;
 
 constexpr unsigned int FRAMERATE_LIMIT = 60;
 
-
 int main()
 {
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
@@ -21,6 +20,7 @@ int main()
 
     sf::Clock clock;
     int counter = 1;
+    auto window_position = window.getPosition();
     while (window.isOpen())
     {
         counter++;
@@ -46,7 +46,7 @@ int main()
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < 5; i++)
             {
                 float velocity_x = (rand() % 100) / 10.0f - 5.0f;
                 float velocity_y = (rand() % 100) / 10.0f - 5.0f;
@@ -56,7 +56,12 @@ int main()
             }
         }
 
-        auto mouse_position = sf::Mouse::getPosition(window);
+        auto new_window_position = window.getPosition();
+        if (window_position != new_window_position)
+        {
+            sandbox.add_particle_velocity({static_cast<float>(window_position.x - new_window_position.x) / 10.0f, static_cast<float>(window_position.y - new_window_position.y) / 10.0f});
+            window_position = new_window_position;
+        }
 
         sandbox.update();
         window.clear();

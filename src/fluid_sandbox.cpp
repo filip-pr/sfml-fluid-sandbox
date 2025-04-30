@@ -18,12 +18,36 @@ void FluidSandbox::add_particle(sf::Vector2f position)
     grid_.insert(&particles_.back());
 }
 
+void FluidSandbox::add_particle_velocity(sf::Vector2f velocity){
+    for (auto &&particle : particles_)
+    {
+        particle.velocity += velocity;
+    }
+}
+
+void FluidSandbox::update()
+{
+    apply_gravity();
+    apply_viscosity();
+    move_particles();
+    adjust_springs();
+    apply_spring_displacements();
+    do_double_density_relaxation();
+    resolve_collisions();
+    recalculate_velocity();
+}
+
 void FluidSandbox::apply_gravity()
 {
     for (auto &&particle : particles_)
     {
         particle.velocity.y += GRAVITY * dt_;
     }
+}
+
+void FluidSandbox::apply_viscosity()
+{
+
 }
 
 void FluidSandbox::move_particles()
@@ -36,41 +60,15 @@ void FluidSandbox::move_particles()
     grid_.batch_insert(particles_);
 }
 
-void FluidSandbox::enforce_constraints()
+void FluidSandbox::adjust_springs()
 {
-    float dampening_factor = 0.3f;
-    const float min_x = PARTICLE_RADIUS;
-    const float max_x = static_cast<float>(size_.x) - PARTICLE_RADIUS;
-    const float min_y = PARTICLE_RADIUS;
-    const float max_y = static_cast<float>(size_.y) - PARTICLE_RADIUS;
-
-    for (auto &&particle : particles_)
-    {
-        if (particle.position.x < min_x)
-        {
-            particle.position.x = min_x;
-            particle.velocity.x *= -dampening_factor;
-        }
-        else if (particle.position.x > max_x)
-        {
-            particle.position.x = max_x;
-            particle.velocity.x *= -dampening_factor;
-        }
-
-        if (particle.position.y < min_y)
-        {
-            particle.position.y = min_y;
-            particle.velocity.y *= -dampening_factor;
-        }
-        else if (particle.position.y > max_y)
-        {
-            particle.position.y = max_y;
-            particle.velocity.y *= -dampening_factor;
-        }
-    }
 }
 
-void FluidSandbox::apply_double_density_relaxation()
+void FluidSandbox::apply_spring_displacements()
+{
+}
+
+void FluidSandbox::do_double_density_relaxation()
 {
     const float interaction_radius = 60.0f;
 
@@ -144,6 +142,40 @@ void FluidSandbox::apply_double_density_relaxation()
     }
 }
 
+void FluidSandbox::resolve_collisions()
+{
+    float dampening_factor = 0.3f;
+    const float min_x = PARTICLE_RADIUS;
+    const float max_x = static_cast<float>(size_.x) - PARTICLE_RADIUS;
+    const float min_y = PARTICLE_RADIUS;
+    const float max_y = static_cast<float>(size_.y) - PARTICLE_RADIUS;
+
+    for (auto &&particle : particles_)
+    {
+        if (particle.position.x < min_x)
+        {
+            particle.position.x = min_x;
+            particle.velocity.x *= -dampening_factor;
+        }
+        else if (particle.position.x > max_x)
+        {
+            particle.position.x = max_x;
+            particle.velocity.x *= -dampening_factor;
+        }
+
+        if (particle.position.y < min_y)
+        {
+            particle.position.y = min_y;
+            particle.velocity.y *= -dampening_factor;
+        }
+        else if (particle.position.y > max_y)
+        {
+            particle.position.y = max_y;
+            particle.velocity.y *= -dampening_factor;
+        }
+    }
+}
+
 void FluidSandbox::recalculate_velocity()
 {
     const float inv_dt = 1.0f / dt_;
@@ -151,15 +183,6 @@ void FluidSandbox::recalculate_velocity()
     {
         particle.velocity = (particle.position - particle.prev_position) * inv_dt;
     }
-}
-
-void FluidSandbox::update()
-{
-    apply_gravity();
-    move_particles();
-    apply_double_density_relaxation();
-    enforce_constraints();
-    recalculate_velocity();
 }
 
 void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const

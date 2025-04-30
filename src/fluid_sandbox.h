@@ -24,6 +24,8 @@ public:
 
     void resize(sf::Vector2u size) { size_ = size; }
 
+    void add_particle_velocity(sf::Vector2f velocity);
+
     void update();
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
@@ -35,9 +37,12 @@ private:
     SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 10};
 
     void apply_gravity();
+    void apply_viscosity();
     void move_particles();
-    void enforce_constraints();
-    void apply_double_density_relaxation();
+    void adjust_springs();
+    void apply_spring_displacements();
+    void do_double_density_relaxation();
+    void resolve_collisions();
     void recalculate_velocity();
 };
 #endif
