@@ -25,12 +25,14 @@ void FluidSandbox::apply_gravity()
     }
 }
 
-void FluidSandbox::update_particles()
+void FluidSandbox::move_particles()
 {
+    grid_.clear();
     for (auto &&particle : particles_)
     {
         particle.update(dt_);
     }
+    grid_.batch_insert(particles_);
 }
 
 void FluidSandbox::enforce_constraints()
@@ -63,9 +65,9 @@ void FluidSandbox::enforce_constraints()
 
 void FluidSandbox::apply_double_density_relaxation()
 {
-    float interaction_radius = PARTICLE_RADIUS * 10;
+    float interaction_radius = 25;
 
-    float rest_density = 10.0f;
+    float rest_density = 1.0f;
     float stiffness = 0.5f;
     float near_stiffness = 0.5f;
 
@@ -96,28 +98,30 @@ void FluidSandbox::apply_double_density_relaxation()
                 continue;
             sf::Vector2f displacement = utils::distance_vector(neighbor->position, particle.position) * static_cast<float>(std::pow(dt_, 2) * (pressure * (1 - distance_ratio) + near_pressure * std::pow(1 - distance_ratio, 2)) / 2);
 
-
             neighbor->position = neighbor->position + displacement;
 
             force = force - displacement;
         }
 
         particle.position = particle.position + force;
+    }
+}
 
+void FluidSandbox::recalculate_velocity()
+{
+    for (auto &&particle : particles_)
+    {
+        particle.velocity = (particle.position - particle.prev_position) / dt_;
     }
 }
 
 void FluidSandbox::update()
 {
     apply_gravity();
-
-    update_particles();
-    enforce_constraints();
-
-
+    move_particles();
     apply_double_density_relaxation();
-    grid_.clear();
-    grid_.batch_insert(particles_);
+    enforce_constraints();
+    recalculate_velocity();
 }
 
 void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const

@@ -9,16 +9,15 @@ constexpr char const *WINDOW_TITLE = "Fluid Simulation Sandbox";
 constexpr unsigned int DEFAULT_WINDOW_WIDTH = 800;
 constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 500;
 
-constexpr unsigned int FRAMERATE_LIMIT = 144;
+constexpr unsigned int FRAMERATE_LIMIT = 60;
 
-constexpr float SIMULATION_SPEED = 5.0f;
 
 int main()
 {
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
     window.setFramerateLimit(FRAMERATE_LIMIT);
 
-    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, 1.0f / FRAMERATE_LIMIT * SIMULATION_SPEED);
+    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, 1);
 
     sf::Clock clock;
     int counter = 1;
@@ -47,12 +46,12 @@ int main()
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 5; i++)
             {
                 float velocity_x = (rand() % 100) / 10.0f - 5.0f;
                 float velocity_y = (rand() % 100) / 10.0f - 5.0f;
-                float x_offset = (rand() % 100) / 10.0f - 5.0f;
-                float y_offset = (rand() % 100) / 10.0f - 5.0f;
+                float x_offset = (rand() % 100) / 100.0f - 5.0f;
+                float y_offset = (rand() % 100) / 100.0f - 5.0f;
                 sandbox.add_particle({static_cast<float>(mouse_position.x) + x_offset, static_cast<float>(mouse_position.y) + y_offset}, {velocity_x, velocity_y});
             }
         }
