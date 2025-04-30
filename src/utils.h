@@ -13,9 +13,9 @@ namespace utils
         return std::hypot(a.x - b.x, a.y - b.y);
     }
 
-    inline sf::Vector2f distance_vector(sf::Vector2f a, sf::Vector2f b)
+    inline float distance_sq(sf::Vector2f a, sf::Vector2f b)
     {
-        return {a.x - b.x, a.y - b.y};
+        return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
     }
 }
 

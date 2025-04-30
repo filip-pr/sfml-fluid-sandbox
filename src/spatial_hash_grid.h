@@ -1,10 +1,8 @@
-
 #ifndef SPATIAL_HASH_GRID_H
 #define SPATIAL_HASH_GRID_H
 
 #include <unordered_map>
 #include <vector>
-#include <deque>
 
 #include "particle.h"
 
@@ -25,18 +23,19 @@ public:
     std::vector<Particle *> query(sf::Vector2f center, float radius) const;
 
 private:
-    std::unordered_map<size_t, std::deque<Particle *>> grid_;
+    std::unordered_map<size_t, std::vector<Particle *>> grid_;
     size_t cell_size_;
 
-    size_t hash(sf::Vector2f &position) const;
-
+    size_t hash(const sf::Vector2f &position) const;
     size_t hash_cell(size_t cell_x, size_t cell_y) const;
     std::vector<size_t> hash_cells(sf::Vector2f center, float radius) const;
 };
 
-inline size_t SpatialHashGrid::hash(sf::Vector2f &position) const
+inline size_t SpatialHashGrid::hash(const sf::Vector2f &position) const
 {
-    return static_cast<size_t>(position.x / cell_size_) + static_cast<size_t>(position.y / cell_size_) * HASH_PRIME;
+    size_t cell_x = (position.x >= 0) ? static_cast<size_t>(position.x / cell_size_) : 0;
+    size_t cell_y = (position.y >= 0) ? static_cast<size_t>(position.y / cell_size_) : 0;
+    return hash_cell(cell_x, cell_y);
 }
 
 inline size_t SpatialHashGrid::hash_cell(size_t cell_x, size_t cell_y) const

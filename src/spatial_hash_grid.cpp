@@ -1,9 +1,5 @@
-
 #include "utils.h"
 #include "spatial_hash_grid.h"
-
-
-#include <cmath>
 
 void SpatialHashGrid::insert(Particle *particle)
 {
@@ -33,7 +29,7 @@ inline std::vector<size_t> SpatialHashGrid::hash_cells(sf::Vector2f center, floa
     size_t min_cell_x = (center.x - radius) > 0 ? static_cast<size_t>(center.x - radius) / cell_size_ : 0;
     size_t max_cell_x = (center.x + radius) > 0 ? static_cast<size_t>(center.x + radius) / cell_size_ : 0;
     size_t min_cell_y = (center.y - radius) > 0 ? static_cast<size_t>(center.y - radius) / cell_size_ : 0;
-    size_t max_cell_y = (center.y - radius) > 0 ? static_cast<size_t>(center.y + radius) / cell_size_ : 0;
+    size_t max_cell_y = (center.y + radius) > 0 ? static_cast<size_t>(center.y + radius) / cell_size_ : 0;
 
     for (size_t x = min_cell_x; x <= max_cell_x; ++x)
     {
@@ -48,6 +44,7 @@ inline std::vector<size_t> SpatialHashGrid::hash_cells(sf::Vector2f center, floa
 std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius) const
 {
     std::vector<Particle *> result;
+    const float radius_sq = radius * radius; // Precompute squared radius
 
     auto keys = hash_cells(center, radius);
     for (const auto &key : keys)
@@ -58,8 +55,7 @@ std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius
 
         for (const auto &particle : it->second)
         {
-            float distance = utils::distance(center, particle->position);
-            if (distance <= radius)
+            if (utils::distance_sq(center, particle->position) <= radius_sq)
             {
                 result.push_back(particle);
             }
@@ -74,9 +70,9 @@ void SpatialHashGrid::clear()
     grid_.clear();
 }
 
-void SpatialHashGrid::batch_insert(std::vector<Particle>& particles) // TODO this could probably be optimized
+void SpatialHashGrid::batch_insert(std::vector<Particle> &particles)
 {
-    for (auto&& particle : particles)
+    for (auto &&particle : particles)
     {
         insert(&particle);
     }

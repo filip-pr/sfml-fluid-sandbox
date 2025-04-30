@@ -6,8 +6,8 @@
 
 constexpr char const *WINDOW_TITLE = "Fluid Simulation Sandbox";
 
-constexpr unsigned int DEFAULT_WINDOW_WIDTH = 800;
-constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 500;
+constexpr unsigned int DEFAULT_WINDOW_WIDTH = 1200;
+constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 700;
 
 constexpr unsigned int FRAMERATE_LIMIT = 60;
 
@@ -15,7 +15,7 @@ constexpr unsigned int FRAMERATE_LIMIT = 60;
 int main()
 {
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
-    window.setFramerateLimit(FRAMERATE_LIMIT);
+    //window.setFramerateLimit(FRAMERATE_LIMIT);
 
     FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, 1);
 
@@ -46,7 +46,7 @@ int main()
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 50; i++)
             {
                 float velocity_x = (rand() % 100) / 10.0f - 5.0f;
                 float velocity_y = (rand() % 100) / 10.0f - 5.0f;
