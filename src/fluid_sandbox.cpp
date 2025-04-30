@@ -37,7 +37,7 @@ void FluidSandbox::move_particles()
 
 void FluidSandbox::enforce_constraints()
 {
-    float dampening_factor = 0.5f;
+    float dampening_factor = 0.3f;
     for (auto &&particle : particles_)
     {
         if (particle.position.x - PARTICLE_RADIUS < 0)
@@ -65,9 +65,9 @@ void FluidSandbox::enforce_constraints()
 
 void FluidSandbox::apply_double_density_relaxation()
 {
-    float interaction_radius = 25;
+    float interaction_radius = 30;
 
-    float rest_density = 1.0f;
+    float rest_density = 4.0f;
     float stiffness = 0.5f;
     float near_stiffness = 0.5f;
 
@@ -79,6 +79,8 @@ void FluidSandbox::apply_double_density_relaxation()
 
         for (auto &&neighbor : neighbors)
         {
+            if (neighbor == &particle)
+                continue;
             float distance_ratio = utils::distance(particle.position, neighbor->position) / interaction_radius;
             if (distance_ratio >= 1)
                 continue;
@@ -93,17 +95,21 @@ void FluidSandbox::apply_double_density_relaxation()
 
         for (auto &&neighbor : neighbors)
         {
+            if (neighbor == &particle)
+                continue;
             float distance_ratio = utils::distance(neighbor->position, particle.position) / interaction_radius;
             if (distance_ratio >= 1)
                 continue;
-            sf::Vector2f displacement = utils::distance_vector(neighbor->position, particle.position) * static_cast<float>(std::pow(dt_, 2) * (pressure * (1 - distance_ratio) + near_pressure * std::pow(1 - distance_ratio, 2)) / 2);
+            auto distance_vector = utils::distance_vector(neighbor->position, particle.position) + sf::Vector2f(0.0001f, 0.0001f);
+            distance_vector /= distance_vector.length();
+            sf::Vector2f displacement = distance_vector * static_cast<float>(std::pow(dt_, 2) * (pressure * (1 - distance_ratio) + near_pressure * std::pow(1 - distance_ratio, 2)) / 2);
 
-            neighbor->position = neighbor->position + displacement;
+            neighbor->position += displacement;
 
-            force = force - displacement;
+            force -= displacement;
         }
 
-        particle.position = particle.position + force;
+        particle.position += force;
     }
 }
 
@@ -131,8 +137,6 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
     {
         auto &&particle = particles_[i];
 
-        auto neighbors = grid_.query(particle.position, PARTICLE_RADIUS * 2);
-
         particle_vertices[i * 6].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
         particle_vertices[i * 6 + 1].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
         particle_vertices[i * 6 + 2].position = particle.position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
@@ -141,28 +145,9 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
         particle_vertices[i * 6 + 5].position = particle.position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
         for (size_t j = 0; j < 6; j++)
         {
-            particle_vertices[i * 6 + j].color = sf::Color(0, std::min(255, static_cast<int>(neighbors.size() * 10 + 100)), 0);
-        }
-    }
-
-    auto highlight_particles = grid_.query(close_highlight_position, PARTICLE_RADIUS * 2);
-
-    sf::VertexArray highlight_particles_vertices(sf::PrimitiveType::Triangles, highlight_particles.size() * 6);
-
-    for (size_t i = 0; i < highlight_particles.size(); i++)
-    {
-        highlight_particles_vertices[i * 6].position = highlight_particles[i]->position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        highlight_particles_vertices[i * 6 + 1].position = highlight_particles[i]->position + sf::Vector2f(PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        highlight_particles_vertices[i * 6 + 2].position = highlight_particles[i]->position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        highlight_particles_vertices[i * 6 + 3].position = highlight_particles[i]->position + sf::Vector2f(-PARTICLE_RADIUS, -PARTICLE_RADIUS);
-        highlight_particles_vertices[i * 6 + 4].position = highlight_particles[i]->position + sf::Vector2f(PARTICLE_RADIUS, PARTICLE_RADIUS);
-        highlight_particles_vertices[i * 6 + 5].position = highlight_particles[i]->position + sf::Vector2f(-PARTICLE_RADIUS, PARTICLE_RADIUS);
-        for (size_t j = 0; j < 6; j++)
-        {
-            highlight_particles_vertices[i * 6 + j].color = sf::Color::Red;
+            particle_vertices[i * 6 + j].color = sf::Color::Blue;
         }
     }
 
     target.draw(particle_vertices, states);
-    target.draw(highlight_particles_vertices, states);
 }

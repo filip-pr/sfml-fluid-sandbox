@@ -15,8 +15,6 @@ constexpr float GRAVITY = 0.4f;
 class FluidSandbox : public sf::Drawable
 {
 public:
-    sf::Vector2f close_highlight_position; // for debugging
-
     FluidSandbox(sf::Vector2u size, float dt) : size_(size), dt_(dt) {}
 
     void add_particle(sf::Vector2f position, sf::Vector2f velocity);
@@ -33,7 +31,7 @@ private:
     sf::Vector2u size_;
     float dt_;
     std::vector<Particle> particles_;
-    SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 2};
+    SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 4};
 
     void apply_gravity();
     void move_particles();

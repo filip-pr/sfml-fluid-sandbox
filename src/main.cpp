@@ -58,8 +58,6 @@ int main()
 
         auto mouse_position = sf::Mouse::getPosition(window);
 
-        sandbox.close_highlight_position = {static_cast<float>(mouse_position.x), static_cast<float>(mouse_position.y)};
-
         sandbox.update();
         window.clear();
         window.draw(sandbox);
