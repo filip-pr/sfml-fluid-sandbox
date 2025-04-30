@@ -35,7 +35,7 @@ private:
     SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 10};
 
     std::vector<float> particle_pressures_;
-    std::vector<std::vector<Particle *>> neighbors_cache_;
+    std::vector<std::vector<Particle *>> particle_neighbors_;
 
     void apply_gravity(float dt, sf::Vector2f gravity);
     void apply_viscosity();

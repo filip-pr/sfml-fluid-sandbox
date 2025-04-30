@@ -6,14 +6,12 @@
 
 void FluidSandbox::add_particle(sf::Vector2f position, sf::Vector2f velocity)
 {
-    particle_pressures_.emplace_back(0.0f);
     particles_.emplace_back(position, velocity);
     grid_.insert(&particles_.back());
 }
 
 void FluidSandbox::add_particle(sf::Vector2f position)
 {
-    particle_pressures_.emplace_back(0.0f);
     particles_.emplace_back(position);
     grid_.insert(&particles_.back());
 }
@@ -28,11 +26,23 @@ void FluidSandbox::add_particle_velocity(sf::Vector2f velocity)
 
 void FluidSandbox::update(float dt, sf::Vector2f gravity, float interaction_radius, float rest_density, float stiffness, float near_stiffness)
 {
+    if (particle_neighbors_.size() < particles_.size())
+    {
+        particle_neighbors_.resize(particles_.size());
+    }
     apply_gravity(dt, gravity);
     apply_viscosity();
     move_particles(dt);
     adjust_springs();
     apply_spring_displacements();
+
+    size_t particle_id = 0;
+    for (auto &&particle : particles_)
+    {
+        particle_neighbors_[particle_id] = grid_.query(particle.position, interaction_radius);
+        ++particle_id;
+    }
+
     do_double_density_relaxation(dt, interaction_radius, rest_density, stiffness, near_stiffness);
     resolve_collisions();
     recalculate_velocity(dt);
@@ -73,13 +83,13 @@ void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radi
     const float interaction_radius_sq = interaction_radius * interaction_radius;
     const float dt_sq_half = 0.5f * dt * dt;
 
-    size_t counter = 0;
-
+    size_t particle_id = 0;
     for (auto &&particle : particles_)
     {
         float density = 0.0f;
         float near_density = 0.0f;
-        auto neighbors = grid_.query(particle.position, interaction_radius);
+
+        auto neighbors = particle_neighbors_[particle_id];
 
         for (auto &&neighbor : neighbors)
         {
@@ -104,7 +114,13 @@ void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radi
         float pressure = stiffness * (density - rest_density);
         float near_pressure = near_stiffness * near_density;
 
-        particle_pressures_[counter] = pressure;
+        if (particle_id >= particle_pressures_.size())
+        {
+            particle_pressures_.push_back(pressure);
+        }
+        else{
+            particle_pressures_[particle_id] = pressure;
+        }
 
         sf::Vector2f total_displacement = {0.0f, 0.0f};
 
@@ -131,7 +147,7 @@ void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radi
             total_displacement -= displacement;
         }
         particle.position += total_displacement;
-        counter++;
+        ++particle_id;
     }
 }
 
