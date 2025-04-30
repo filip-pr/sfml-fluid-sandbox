@@ -9,7 +9,7 @@
 #include "particle.h"
 #include "spatial_hash_grid.h"
 
-constexpr float PARTICLE_RADIUS = 4;
+constexpr float PARTICLE_RADIUS = 3.0f;
 constexpr float GRAVITY = 0.4f;
 
 class FluidSandbox : public sf::Drawable
@@ -31,7 +31,8 @@ private:
     sf::Vector2u size_;
     float dt_;
     std::vector<Particle> particles_;
-    SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 8};
+    std::vector<sf::Color> particle_colors_;
+    SpatialHashGrid grid_{static_cast<size_t>(PARTICLE_RADIUS) * 10};
 
     void apply_gravity();
     void move_particles();
