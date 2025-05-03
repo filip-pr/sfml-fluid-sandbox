@@ -4,9 +4,35 @@
 #include <algorithm>
 #include <cmath>
 
-void FluidSandbox::add_particle(sf::Vector2f position, sf::Vector2f velocity)
+void FluidSandbox::clear_particles()
 {
-    particles_.emplace_back(position, velocity);
+    particles_.clear();
+}
+
+void FluidSandbox::add_particles(sf::Vector2f position, float radius, size_t number)
+{
+    particles_.reserve(particles_.size() + number);
+    for (size_t i = 0; i < number; ++i)
+    {
+        float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * M_PI;
+        float distance = static_cast<float>(rand()) / RAND_MAX * radius;
+        sf::Vector2f offset = {std::cos(angle) * distance, std::sin(angle) * distance};
+        particles_.emplace_back(position + offset);
+    }
+    grid_.update(particles_, params_.interaction_radius);
+    particle_neighbors_.resize(particles_.size());
+}
+
+void FluidSandbox::remove_particles(sf::Vector2f position, float radius)
+{
+    float radius_sq = radius * radius;
+    auto it = std::remove_if(particles_.begin(), particles_.end(),
+        [position, radius_sq](const Particle &particle) {
+            return utils::distance_sq(particle.position, position) < radius_sq;
+        });
+    particles_.erase(it, particles_.end());
+    grid_.update(particles_, params_.interaction_radius);
+    particle_neighbors_.resize(particles_.size());
 }
 
 void FluidSandbox::push_particles(sf::Vector2f velocity)
@@ -19,10 +45,6 @@ void FluidSandbox::push_particles(sf::Vector2f velocity)
 
 void FluidSandbox::update()
 {
-    if (particle_neighbors_.size() < particles_.size())
-    {
-        particle_neighbors_.resize(particles_.size());
-    }
     apply_gravity();
     apply_viscosity();
     move_particles();

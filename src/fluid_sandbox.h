@@ -9,7 +9,7 @@
 #include "particle.h"
 #include "spatial_hash_grid.h"
 
-constexpr float BASE_PARTICLE_SIZE = 4.0f;
+constexpr float BASE_PARTICLE_SIZE = 15.0f;
 constexpr float PARTICLE_SIZE_PRESSURE_MULTIPLIER = 5.0f;
 constexpr float PARTICLE_COLOR_PRESSURE_MULTIPLIER = 50.0f;
 
@@ -32,7 +32,9 @@ public:
     void resize(sf::Vector2u size) { size_ = size; }
     void update_params(SimulationParameters &params) { params_ = params; }
 
-    void add_particle(sf::Vector2f position, sf::Vector2f velocity = {0, 0});
+    void clear_particles();
+    void add_particles(sf::Vector2f position, float radius, size_t number);
+    void remove_particles(sf::Vector2f position, float radius);
     void push_particles(sf::Vector2f velocity);
 
     void update();

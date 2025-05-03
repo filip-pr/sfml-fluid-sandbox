@@ -34,7 +34,7 @@ int main()
             }
             if (const auto *resized = event->getIf<sf::Event::Resized>())
             {
-                window.setView(sf::View(sf::FloatRect({0, 0}, {static_cast<float>(resized->size.x), static_cast<float>(resized->size.y)})));
+                window.setView(sf::View(sf::FloatRect({0, 0}, static_cast<sf::Vector2f>(resized->size))));
                 sandbox.resize({resized->size.x, resized->size.y});
             }
         }
@@ -48,20 +48,22 @@ int main()
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            for (int i = 0; i < 5; i++)
-            {
-                float velocity_x = (rand() % 100) / 10.0f - 5.0f;
-                float velocity_y = (rand() % 100) / 10.0f - 5.0f;
-                float x_offset = (rand() % 100) / 100.0f - 5.0f;
-                float y_offset = (rand() % 100) / 100.0f - 5.0f;
-                sandbox.add_particle({static_cast<float>(mouse_position.x) + x_offset, static_cast<float>(mouse_position.y) + y_offset}, {velocity_x, velocity_y});
-            }
+            sandbox.add_particles(static_cast<sf::Vector2f>(mouse_position), 50.0f, 1);
+        }
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
+        {
+            const auto mouse_position = sf::Mouse::getPosition(window);
+            sandbox.remove_particles(static_cast<sf::Vector2f>(mouse_position), 50.0f);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
+        {
+            sandbox.clear_particles();
         }
 
         auto new_window_position = window.getPosition();
         if (window_position != new_window_position)
         {
-            sandbox.push_particles({static_cast<float>(window_position.x - new_window_position.x) / 10.0f, static_cast<float>(window_position.y - new_window_position.y) / 10.0f});
+            sandbox.push_particles(static_cast<sf::Vector2f>(window_position - new_window_position) / 10.0f);
             window_position = new_window_position;
         }
 
