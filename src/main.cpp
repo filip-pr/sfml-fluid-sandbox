@@ -16,7 +16,9 @@ int main()
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
     window.setFramerateLimit(FRAMERATE_LIMIT);
 
-    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, 1);
+    SimulationParameters params = {1.0f, {0, 0.4f}, 60.0f, 6.0f, 0.5f, 0.5f};
+
+    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, params);
 
     sf::Clock clock;
     int counter = 1;
@@ -59,11 +61,11 @@ int main()
         auto new_window_position = window.getPosition();
         if (window_position != new_window_position)
         {
-            sandbox.add_particle_velocity({static_cast<float>(window_position.x - new_window_position.x) / 10.0f, static_cast<float>(window_position.y - new_window_position.y) / 10.0f});
+            sandbox.push_particles({static_cast<float>(window_position.x - new_window_position.x) / 10.0f, static_cast<float>(window_position.y - new_window_position.y) / 10.0f});
             window_position = new_window_position;
         }
 
-        sandbox.update(1.0f, {0, 0.4f}, 60.0f, 6.0f, 0.5f, 0.5f);
+        sandbox.update();
         window.clear();
         window.draw(sandbox);
         window.display();

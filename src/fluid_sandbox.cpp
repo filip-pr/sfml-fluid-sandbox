@@ -7,16 +7,10 @@
 void FluidSandbox::add_particle(sf::Vector2f position, sf::Vector2f velocity)
 {
     particles_.emplace_back(position, velocity);
-    grid_.insert(&particles_.back());
 }
 
-void FluidSandbox::add_particle(sf::Vector2f position)
-{
-    particles_.emplace_back(position);
-    grid_.insert(&particles_.back());
-}
 
-void FluidSandbox::add_particle_velocity(sf::Vector2f velocity)
+void FluidSandbox::push_particles(sf::Vector2f velocity)
 {
     for (auto &&particle : particles_)
     {
@@ -24,35 +18,35 @@ void FluidSandbox::add_particle_velocity(sf::Vector2f velocity)
     }
 }
 
-void FluidSandbox::update(float dt, sf::Vector2f gravity, float interaction_radius, float rest_density, float stiffness, float near_stiffness)
+void FluidSandbox::update()
 {
     if (particle_neighbors_.size() < particles_.size())
     {
         particle_neighbors_.resize(particles_.size());
     }
-    apply_gravity(dt, gravity);
+    apply_gravity();
     apply_viscosity();
-    move_particles(dt);
+    move_particles();
     adjust_springs();
     apply_spring_displacements();
 
     size_t particle_id = 0;
     for (auto &&particle : particles_)
     {
-        particle_neighbors_[particle_id] = grid_.query(particle.position, interaction_radius);
+        particle_neighbors_[particle_id] = grid_.query(particle.position, params_.interaction_radius);
         ++particle_id;
     }
 
-    do_double_density_relaxation(dt, interaction_radius, rest_density, stiffness, near_stiffness);
+    do_double_density_relaxation();
     resolve_collisions();
-    recalculate_velocity(dt);
+    recalculate_velocity();
 }
 
-void FluidSandbox::apply_gravity(float dt, sf::Vector2f gravity)
+void FluidSandbox::apply_gravity()
 {
     for (auto &&particle : particles_)
     {
-        particle.velocity += gravity * dt;
+        particle.velocity += params_.gravity * params_.dt;
     }
 }
 
@@ -60,14 +54,13 @@ void FluidSandbox::apply_viscosity()
 {
 }
 
-void FluidSandbox::move_particles(float dt)
+void FluidSandbox::move_particles()
 {
-    grid_.clear();
     for (auto &&particle : particles_)
     {
-        particle.update(dt);
+        particle.update(params_.dt);
     }
-    grid_.batch_insert(particles_);
+    grid_.update(particles_, params_.interaction_radius);
 }
 
 void FluidSandbox::adjust_springs()
@@ -78,10 +71,10 @@ void FluidSandbox::apply_spring_displacements()
 {
 }
 
-void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radius, float rest_density, float stiffness, float near_stiffness)
+void FluidSandbox::do_double_density_relaxation()
 {
-    const float interaction_radius_sq = interaction_radius * interaction_radius;
-    const float dt_sq_half = 0.5f * dt * dt;
+    const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
+    const float dt_sq_half = 0.5f * params_.dt * params_.dt;
 
     size_t particle_id = 0;
     for (auto &&particle : particles_)
@@ -102,7 +95,7 @@ void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radi
                 continue;
 
             float distance = std::sqrt(distance_sq);
-            float distance_ratio = distance / interaction_radius;
+            float distance_ratio = distance / params_.interaction_radius;
 
             float one_minus_ratio = 1.0f - distance_ratio;
             float one_minus_ratio_sq = one_minus_ratio * one_minus_ratio;
@@ -111,14 +104,15 @@ void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radi
             near_density += one_minus_ratio * one_minus_ratio;
         }
 
-        float pressure = stiffness * (density - rest_density);
-        float near_pressure = near_stiffness * near_density;
+        float pressure = params_.stiffness * (density - params_.rest_density);
+        float near_pressure = params_.near_stiffness * near_density;
 
         if (particle_id >= particle_pressures_.size())
         {
             particle_pressures_.push_back(pressure);
         }
-        else{
+        else
+        {
             particle_pressures_[particle_id] = pressure;
         }
 
@@ -136,7 +130,7 @@ void FluidSandbox::do_double_density_relaxation(float dt, float interaction_radi
                 continue;
 
             float distance = std::sqrt(dist_sq);
-            float distance_ratio = distance / interaction_radius;
+            float distance_ratio = distance / params_.interaction_radius;
             float one_minus_ratio = 1.0f - distance_ratio;
 
             float displacement_magnitude = dt_sq_half * (pressure * one_minus_ratio + near_pressure * (one_minus_ratio * one_minus_ratio));
@@ -185,9 +179,9 @@ void FluidSandbox::resolve_collisions()
     }
 }
 
-void FluidSandbox::recalculate_velocity(float dt)
+void FluidSandbox::recalculate_velocity()
 {
-    const float inv_dt = 1.0f / dt;
+    const float inv_dt = 1.0f / params_.dt;
     for (auto &&particle : particles_)
     {
         particle.velocity = (particle.position - particle.prev_position) * inv_dt;
