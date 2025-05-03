@@ -95,7 +95,7 @@ inline std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float
     return result;
 }
 
-void SpatialHashGrid::update(std::vector<Particle> &particles, size_t cell_size)
+inline void SpatialHashGrid::update(std::vector<Particle> &particles, size_t cell_size)
 {
     clear();
     cell_size_ = cell_size;

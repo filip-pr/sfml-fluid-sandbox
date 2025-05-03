@@ -9,7 +9,6 @@ void FluidSandbox::add_particle(sf::Vector2f position, sf::Vector2f velocity)
     particles_.emplace_back(position, velocity);
 }
 
-
 void FluidSandbox::push_particles(sf::Vector2f velocity)
 {
     for (auto &&particle : particles_)
@@ -74,6 +73,7 @@ void FluidSandbox::apply_spring_displacements()
 void FluidSandbox::do_double_density_relaxation()
 {
     const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
+    const float inv_interaction_radius = 1.0f / params_.interaction_radius;
     const float dt_sq_half = 0.5f * params_.dt * params_.dt;
 
     size_t particle_id = 0;
@@ -95,7 +95,7 @@ void FluidSandbox::do_double_density_relaxation()
                 continue;
 
             float distance = std::sqrt(distance_sq);
-            float distance_ratio = distance / params_.interaction_radius;
+            float distance_ratio = distance * inv_interaction_radius;
 
             float one_minus_ratio = 1.0f - distance_ratio;
             float one_minus_ratio_sq = one_minus_ratio * one_minus_ratio;
@@ -130,7 +130,7 @@ void FluidSandbox::do_double_density_relaxation()
                 continue;
 
             float distance = std::sqrt(dist_sq);
-            float distance_ratio = distance / params_.interaction_radius;
+            float distance_ratio = distance * inv_interaction_radius;
             float one_minus_ratio = 1.0f - distance_ratio;
 
             float displacement_magnitude = dt_sq_half * (pressure * one_minus_ratio + near_pressure * (one_minus_ratio * one_minus_ratio));
@@ -148,10 +148,10 @@ void FluidSandbox::do_double_density_relaxation()
 void FluidSandbox::resolve_collisions()
 {
     float dampening_factor = 0.3f;
-    const float min_x = PARTICLE_RADIUS;
-    const float max_x = static_cast<float>(size_.x) - PARTICLE_RADIUS;
-    const float min_y = PARTICLE_RADIUS;
-    const float max_y = static_cast<float>(size_.y) - PARTICLE_RADIUS;
+    const float min_x = 0;
+    const float max_x = static_cast<float>(size_.x);
+    const float min_y = 0;
+    const float max_y = static_cast<float>(size_.y);
 
     for (auto &&particle : particles_)
     {
@@ -195,7 +195,7 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
     {
         auto &&particle = particles_[i];
         float pressure = particle_pressures_[i];
-        float particle_size = std::max(15 + pressure * 5, 1.0f);
+        float particle_size = std::max(BASE_PARTICLE_SIZE + pressure * PARTICLE_SIZE_PRESSURE_MULTIPLIER, 1.0f);
 
         particle_vertices[i * 6].position = particle.position + sf::Vector2f(-particle_size, -particle_size);
         particle_vertices[i * 6 + 1].position = particle.position + sf::Vector2f(particle_size, -particle_size);
@@ -205,7 +205,7 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
         particle_vertices[i * 6 + 5].position = particle.position + sf::Vector2f(-particle_size, particle_size);
         for (size_t j = 0; j < 6; j++)
         {
-            int pressure_color = std::clamp(static_cast<int>(128 - pressure * 50), 0, 255);
+            int pressure_color = std::clamp(static_cast<int>(128 - pressure * PARTICLE_COLOR_PRESSURE_MULTIPLIER), 0, 255);
             particle_vertices[i * 6 + j].color = sf::Color(pressure_color, pressure_color, 255);
         }
     }

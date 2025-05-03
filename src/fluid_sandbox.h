@@ -9,8 +9,9 @@
 #include "particle.h"
 #include "spatial_hash_grid.h"
 
-constexpr float PARTICLE_RADIUS = 3.0f;
-constexpr float GRAVITY = 0.4f;
+constexpr float BASE_PARTICLE_SIZE = 4.0f;
+constexpr float PARTICLE_SIZE_PRESSURE_MULTIPLIER = 5.0f;
+constexpr float PARTICLE_COLOR_PRESSURE_MULTIPLIER = 50.0f;
 
 struct SimulationParameters
 {
