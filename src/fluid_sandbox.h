@@ -9,9 +9,12 @@
 #include "particle.h"
 #include "spatial_hash_grid.h"
 
-constexpr float BASE_PARTICLE_SIZE = 15.0f;
-constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER = 5.0f;
-constexpr float PARTICLE_STRESS_COLOR_MULTIPLIER = 50.0f;
+constexpr float BASE_PARTICLE_SIZE = 5.0f;
+constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER = 10.0f;
+constexpr float BASE_PARTICLE_COLOR = 220.0f;
+constexpr float PARTICLE_STRESS_COLOR_MULTIPLIER = 100.0f;
+
+constexpr float COLLISION_DAMPENING = 1.0f;
 
 struct SimulationParameters
 {
@@ -21,6 +24,8 @@ struct SimulationParameters
     float rest_density;
     float stiffness;
     float near_stiffness;
+    float linear_viscosity;
+    float quadratic_viscosity;
 };
 
 class FluidSandbox : public sf::Drawable
@@ -44,6 +49,8 @@ private:
     sf::Vector2u size_;
     SimulationParameters params_;
 
+    bool reverse_calculation_order_ = false;
+
     std::vector<Particle> particles_;
     std::vector<Particle> new_particles_;
     SpatialHashGrid grid_;
@@ -52,8 +59,6 @@ private:
 
     void move_particles();
     void update_neighbors();
-    void adjust_springs();
-    void apply_spring_displacements();
     void do_double_density_relaxation();
     void resolve_collisions();
     void recalculate_velocity();

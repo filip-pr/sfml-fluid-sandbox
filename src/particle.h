@@ -11,6 +11,7 @@ public:
     sf::Vector2f position;
     sf::Vector2f prev_position;
     sf::Vector2f velocity;
+
     float stress = 0.0f;
 
     Particle(sf::Vector2f position) : position(position), prev_position(position), velocity(0, 0) {}

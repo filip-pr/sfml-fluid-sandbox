@@ -8,7 +8,6 @@
 #include "utils.h"
 #include "particle.h"
 
-constexpr size_t HASH_PRIME = 1168639;
 
 class SpatialHashGrid
 {
@@ -38,7 +37,7 @@ inline size_t SpatialHashGrid::hash(const sf::Vector2f position) const
 
 inline size_t SpatialHashGrid::hash_cell(size_t cell_x, size_t cell_y) const
 {
-    return cell_x + cell_y * HASH_PRIME;
+    return cell_x + cell_y * utils::HASH_PRIME;
 }
 
 inline std::generator<size_t> SpatialHashGrid::hash_cells(sf::Vector2f center, float radius) const
