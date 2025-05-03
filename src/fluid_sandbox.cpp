@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
+
 void FluidSandbox::clear_particles()
 {
     particles_.clear();
@@ -45,19 +46,16 @@ void FluidSandbox::push_particles(sf::Vector2f velocity)
 
 void FluidSandbox::update()
 {
+
+    std::reverse(particles_.begin(), particles_.end());
+
+
     apply_gravity();
     apply_viscosity();
     move_particles();
     adjust_springs();
     apply_spring_displacements();
-
-    size_t particle_id = 0;
-    for (auto &&particle : particles_)
-    {
-        particle_neighbors_[particle_id] = grid_.query(particle.position, params_.interaction_radius);
-        ++particle_id;
-    }
-
+    update_neighbors();
     do_double_density_relaxation();
     resolve_collisions();
     recalculate_velocity();
@@ -90,6 +88,16 @@ void FluidSandbox::adjust_springs()
 
 void FluidSandbox::apply_spring_displacements()
 {
+}
+
+void FluidSandbox::update_neighbors()
+{
+    size_t particle_id = 0;
+    for (auto &&particle : particles_)
+    {
+        particle_neighbors_[particle_id] = grid_.query(particle.position, params_.interaction_radius);
+        ++particle_id;
+    }
 }
 
 void FluidSandbox::do_double_density_relaxation()

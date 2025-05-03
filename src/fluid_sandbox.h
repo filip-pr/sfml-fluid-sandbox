@@ -9,9 +9,9 @@
 #include "particle.h"
 #include "spatial_hash_grid.h"
 
-constexpr float BASE_PARTICLE_SIZE = 15.0f;
-constexpr float PARTICLE_SIZE_PRESSURE_MULTIPLIER = 5.0f;
-constexpr float PARTICLE_COLOR_PRESSURE_MULTIPLIER = 50.0f;
+constexpr float BASE_PARTICLE_SIZE = 5.0f;
+constexpr float PARTICLE_SIZE_PRESSURE_MULTIPLIER = 0;
+constexpr float PARTICLE_COLOR_PRESSURE_MULTIPLIER = 0;
 
 struct SimulationParameters
 {
@@ -47,6 +47,8 @@ private:
     std::vector<Particle> particles_;
     SpatialHashGrid grid_;
 
+    size_t shuffle_counter_ = 0;
+
     std::vector<float> particle_pressures_;
     std::vector<std::vector<Particle *>> particle_neighbors_;
 
@@ -55,6 +57,7 @@ private:
     void move_particles();
     void adjust_springs();
     void apply_spring_displacements();
+    void update_neighbors();
     void do_double_density_relaxation();
     void resolve_collisions();
     void recalculate_velocity();

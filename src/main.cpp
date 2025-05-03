@@ -9,7 +9,7 @@ constexpr char const *WINDOW_TITLE = "Fluid Simulation Sandbox";
 constexpr unsigned int DEFAULT_WINDOW_WIDTH = 1200;
 constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 700;
 
-constexpr unsigned int FRAMERATE_LIMIT = 60;
+constexpr unsigned int FRAMERATE_LIMIT = 120;
 
 int main()
 {
@@ -48,7 +48,7 @@ int main()
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            sandbox.add_particles(static_cast<sf::Vector2f>(mouse_position), 50.0f, 1);
+            sandbox.add_particles(static_cast<sf::Vector2f>(mouse_position), 50.0f, 5);
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
         {
