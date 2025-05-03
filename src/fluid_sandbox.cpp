@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <cmath>
 
-
 void FluidSandbox::clear_particles()
 {
     particles_.clear();
@@ -20,20 +19,17 @@ void FluidSandbox::add_particles(sf::Vector2f position, float radius, size_t num
         sf::Vector2f offset = {std::cos(angle) * distance, std::sin(angle) * distance};
         particles_.emplace_back(position + offset);
     }
-    grid_.update(particles_, params_.interaction_radius);
-    particle_neighbors_.resize(particles_.size());
 }
 
 void FluidSandbox::remove_particles(sf::Vector2f position, float radius)
 {
     float radius_sq = radius * radius;
     auto it = std::remove_if(particles_.begin(), particles_.end(),
-        [position, radius_sq](const Particle &particle) {
+        [position, radius_sq](const Particle &particle)
+        {
             return utils::distance_sq(particle.position, position) < radius_sq;
         });
     particles_.erase(it, particles_.end());
-    grid_.update(particles_, params_.interaction_radius);
-    particle_neighbors_.resize(particles_.size());
 }
 
 void FluidSandbox::push_particles(sf::Vector2f velocity)
@@ -46,31 +42,15 @@ void FluidSandbox::push_particles(sf::Vector2f velocity)
 
 void FluidSandbox::update()
 {
-
-    std::reverse(particles_.begin(), particles_.end());
-
-
-    apply_gravity();
-    apply_viscosity();
     move_particles();
+    update_neighbors();
     adjust_springs();
     apply_spring_displacements();
-    update_neighbors();
     do_double_density_relaxation();
     resolve_collisions();
     recalculate_velocity();
-}
-
-void FluidSandbox::apply_gravity()
-{
-    for (auto &&particle : particles_)
-    {
-        particle.velocity += params_.gravity * params_.dt;
-    }
-}
-
-void FluidSandbox::apply_viscosity()
-{
+    apply_gravity();
+    apply_viscosity();
 }
 
 void FluidSandbox::move_particles()
@@ -79,7 +59,24 @@ void FluidSandbox::move_particles()
     {
         particle.update(params_.dt);
     }
+
+
+
     grid_.update(particles_, params_.interaction_radius);
+}
+
+void FluidSandbox::update_neighbors()
+{
+    if (particles_.size() != particle_neighbors_.size())
+    {
+        particle_neighbors_.resize(particles_.size());
+    }
+    size_t particle_id = 0;
+    for (auto &&particle : particles_)
+    {
+        particle_neighbors_[particle_id] = grid_.query(particle.position, params_.interaction_radius);
+        ++particle_id;
+    }
 }
 
 void FluidSandbox::adjust_springs()
@@ -90,25 +87,22 @@ void FluidSandbox::apply_spring_displacements()
 {
 }
 
-void FluidSandbox::update_neighbors()
-{
-    size_t particle_id = 0;
-    for (auto &&particle : particles_)
-    {
-        particle_neighbors_[particle_id] = grid_.query(particle.position, params_.interaction_radius);
-        ++particle_id;
-    }
-}
-
 void FluidSandbox::do_double_density_relaxation()
 {
+    static bool reverse_ = false;
+
+    reverse_ = !reverse_;
+
     const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
     const float inv_interaction_radius = 1.0f / params_.interaction_radius;
     const float dt_sq_half = 0.5f * params_.dt * params_.dt;
 
-    size_t particle_id = 0;
-    for (auto &&particle : particles_)
+    size_t num_particles = particles_.size();
+
+    for (size_t i = 0; i < num_particles; ++i)
     {
+        size_t particle_id = reverse_ ? num_particles - i - 1: i;
+        auto &particle = particles_[particle_id];
         float density = 0.0f;
         float near_density = 0.0f;
 
@@ -137,14 +131,7 @@ void FluidSandbox::do_double_density_relaxation()
         float pressure = params_.stiffness * (density - params_.rest_density);
         float near_pressure = params_.near_stiffness * near_density;
 
-        if (particle_id >= particle_pressures_.size())
-        {
-            particle_pressures_.push_back(pressure);
-        }
-        else
-        {
-            particle_pressures_[particle_id] = pressure;
-        }
+        particle.stress = STRESS_SMOOTHING * particle.stress + (1-STRESS_SMOOTHING) * pressure;
 
         sf::Vector2f total_displacement = {0.0f, 0.0f};
 
@@ -171,7 +158,6 @@ void FluidSandbox::do_double_density_relaxation()
             total_displacement -= displacement;
         }
         particle.position += total_displacement;
-        ++particle_id;
     }
 }
 
@@ -218,14 +204,25 @@ void FluidSandbox::recalculate_velocity()
     }
 }
 
+void FluidSandbox::apply_gravity()
+{
+    for (auto &&particle : particles_)
+    {
+        particle.velocity += params_.gravity * params_.dt;
+    }
+}
+
+void FluidSandbox::apply_viscosity()
+{
+}
+
 void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
     sf::VertexArray particle_vertices(sf::PrimitiveType::Triangles, particles_.size() * 6);
     for (size_t i = 0; i < particles_.size(); i++)
     {
         auto &&particle = particles_[i];
-        float pressure = particle_pressures_[i];
-        float particle_size = std::max(BASE_PARTICLE_SIZE + pressure * PARTICLE_SIZE_PRESSURE_MULTIPLIER, 1.0f);
+        float particle_size = std::max(BASE_PARTICLE_SIZE + particle.stress * PARTICLE_STRESS_SIZE_MULTIPLIER, 1.0f);
 
         particle_vertices[i * 6].position = particle.position + sf::Vector2f(-particle_size, -particle_size);
         particle_vertices[i * 6 + 1].position = particle.position + sf::Vector2f(particle_size, -particle_size);
@@ -235,10 +232,10 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
         particle_vertices[i * 6 + 5].position = particle.position + sf::Vector2f(-particle_size, particle_size);
         for (size_t j = 0; j < 6; j++)
         {
-            int pressure_color = std::clamp(static_cast<int>(128 - pressure * PARTICLE_COLOR_PRESSURE_MULTIPLIER), 0, 255);
+            int pressure_color = std::clamp(static_cast<int>(128 - particle.stress * PARTICLE_STRESS_COLOR_MULTIPLIER), 0, 255);
             particle_vertices[i * 6 + j].color = sf::Color(pressure_color, pressure_color, 255);
         }
     }
-
+    states.blendMode = sf::BlendMax;
     target.draw(particle_vertices, states);
 }
