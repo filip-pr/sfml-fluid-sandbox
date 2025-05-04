@@ -100,10 +100,7 @@ void FluidSandbox::adjust_apply_strings()
 
         auto &neighbors = particle_neighbors_[particle_id];
 
-        auto old_springs = particle.springs;
-
-        particle.springs.clear();
-        particle.springs.reserve(old_springs.size());
+        std::unordered_map<size_t, float> new_springs;
 
         for (auto &&neighbor : neighbors)
         {
@@ -124,10 +121,10 @@ void FluidSandbox::adjust_apply_strings()
             float distance = std::sqrt(distance_sq);
             float spring_length;
 
-
-            if (old_springs.find(neighbor->id) != old_springs.end())
+            auto it = particle.springs.find(neighbor->id);
+            if (it != particle.springs.end())
             {
-                spring_length = old_springs[neighbor->id];
+                spring_length = it->second;
             }
             else
             {
@@ -146,12 +143,13 @@ void FluidSandbox::adjust_apply_strings()
             {
                 continue;
             }
-            particle.springs.emplace(neighbor->id, spring_length);
+            new_springs.emplace(neighbor->id, spring_length);
 
             sf::Vector2f displacement = dt_sq_spring_stiffness_half * (1 - spring_length * inv_interaction_radius) * (spring_length - distance) * (neighbor->position - particle.position) / distance;
             particle.position -= displacement;
             neighbor->position += displacement;
         }
+        std::swap(particle.springs, new_springs);
     }
 }
 
