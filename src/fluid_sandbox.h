@@ -5,6 +5,8 @@
 #include <SFML/Graphics.hpp>
 
 #include <vector>
+#include <tuple>
+#include <unordered_map>
 
 #include "particle.h"
 #include "spatial_hash_grid.h"
@@ -26,6 +28,9 @@ struct SimulationParameters
     float near_stiffness;
     float linear_viscosity;
     float quadratic_viscosity;
+    float plasticity;
+    float yield_ratio;
+    float spring_stiffness;
 };
 
 class FluidSandbox : public sf::Drawable
@@ -56,9 +61,11 @@ private:
     SpatialHashGrid grid_;
 
     std::vector<std::vector<Particle *>> particle_neighbors_;
+    std::unordered_map<std::tuple<size_t, size_t>, float, utils::TupleHash> springs_;
 
     void move_particles();
     void update_neighbors();
+    void adjust_apply_strings();
     void do_double_density_relaxation();
     void resolve_collisions();
     void recalculate_velocity();

@@ -7,7 +7,11 @@ constexpr float STRESS_SMOOTHING = 0.6f;
 
 struct Particle
 {
+private:
+    static size_t id_counter;
+
 public:
+    size_t id = id_counter++;
     sf::Vector2f position;
     sf::Vector2f prev_position;
     sf::Vector2f velocity;
@@ -23,5 +27,7 @@ public:
         position += velocity * dt;
     }
 };
+
+inline size_t Particle::id_counter = 0;
 
 #endif

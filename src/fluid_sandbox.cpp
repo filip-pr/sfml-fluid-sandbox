@@ -45,6 +45,7 @@ void FluidSandbox::update()
 {
     move_particles();
     update_neighbors();
+    adjust_apply_strings();
     do_double_density_relaxation();
     resolve_collisions();
     recalculate_velocity();
@@ -73,6 +74,80 @@ void FluidSandbox::update_neighbors()
     {
         particle_neighbors_[particle_id] = grid_.query(particle.position, params_.interaction_radius);
         ++particle_id;
+    }
+}
+
+void FluidSandbox::adjust_apply_strings()
+{
+    if (params_.spring_stiffness == 0.0f || params_.plasticity == 0.0f)
+        return;
+
+    const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
+    const float inv_interaction_radius = 1.0f / params_.interaction_radius;
+    const float dt_plasticity = params_.plasticity * params_.dt;
+    const float dt_sq_spring_stiffness_half = params_.spring_stiffness * params_.dt * params_.dt * 0.5f;
+
+    auto old_springs = springs_;
+    springs_.clear();
+
+    size_t num_particles = particles_.size();
+
+    for (size_t i = 0; i < num_particles; ++i)
+    {
+        size_t particle_id = reverse_calculation_order_ ? num_particles - i - 1 : i;
+        auto &particle = particles_[particle_id];
+        float density = 0.0f;
+        float near_density = 0.0f;
+
+        auto &neighbors = particle_neighbors_[particle_id];
+
+        for (auto &&neighbor : neighbors)
+        {
+            if (neighbor <= &particle)
+                continue;
+
+            float distance_sq = utils::distance_sq(particle.position, neighbor->position);
+
+            if (distance_sq >= interaction_radius_sq)
+                continue;
+
+            if (distance_sq < 0.01f)
+            {
+                sf::Vector2f position_diff = neighbor->position - particle.position;
+                neighbor->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
+                continue;
+            }
+            float distance = std::sqrt(distance_sq);
+            float spring_length;
+
+            std::tuple<size_t, size_t> spring_key = {particle.id, neighbor->id};
+
+            if (old_springs.find(spring_key) != old_springs.end())
+            {
+                spring_length = old_springs[spring_key];
+            }
+            else
+            {
+                spring_length = params_.interaction_radius;
+            }
+            float tolerable_deformation = spring_length * params_.yield_ratio;
+            if (distance > spring_length + tolerable_deformation)
+            {
+                spring_length += dt_plasticity * (distance - spring_length - tolerable_deformation);
+            }
+            else if (distance < spring_length - tolerable_deformation)
+            {
+                spring_length -= dt_plasticity * (spring_length - distance - tolerable_deformation);
+            }
+            if (spring_length > params_.interaction_radius)
+            {
+                continue;
+            }
+            springs_.emplace(spring_key, spring_length); // TODO try to optimize this
+            sf::Vector2f displacement = dt_sq_spring_stiffness_half * (1 - spring_length * inv_interaction_radius) * (spring_length - distance) * (neighbor->position - particle.position) / distance;
+            particle.position -= displacement;
+            neighbor->position += displacement;
+        }
     }
 }
 
@@ -220,6 +295,9 @@ void FluidSandbox::apply_gravity()
 
 void FluidSandbox::apply_viscosity()
 {
+    if (params_.linear_viscosity == 0.0f && params_.quadratic_viscosity == 0.0f)
+        return;
+
     const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
     const float inv_interaction_radius = 1.0f / params_.interaction_radius;
     const float dt_half = 0.5f * params_.dt;
