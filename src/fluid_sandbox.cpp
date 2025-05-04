@@ -87,8 +87,7 @@ void FluidSandbox::adjust_apply_strings()
     const float dt_plasticity = params_.plasticity * params_.dt;
     const float dt_sq_spring_stiffness_half = params_.spring_stiffness * params_.dt * params_.dt * 0.5f;
 
-    auto old_springs = springs_;
-    springs_.clear();
+
 
     size_t num_particles = particles_.size();
 
@@ -100,6 +99,11 @@ void FluidSandbox::adjust_apply_strings()
         float near_density = 0.0f;
 
         auto &neighbors = particle_neighbors_[particle_id];
+
+        auto old_springs = particle.springs;
+
+        particle.springs.clear();
+        particle.springs.reserve(old_springs.size());
 
         for (auto &&neighbor : neighbors)
         {
@@ -120,11 +124,10 @@ void FluidSandbox::adjust_apply_strings()
             float distance = std::sqrt(distance_sq);
             float spring_length;
 
-            std::tuple<size_t, size_t> spring_key = {particle.id, neighbor->id};
 
-            if (old_springs.find(spring_key) != old_springs.end())
+            if (old_springs.find(neighbor->id) != old_springs.end())
             {
-                spring_length = old_springs[spring_key];
+                spring_length = old_springs[neighbor->id];
             }
             else
             {
@@ -143,7 +146,8 @@ void FluidSandbox::adjust_apply_strings()
             {
                 continue;
             }
-            springs_.emplace(spring_key, spring_length); // TODO try to optimize this
+            particle.springs.emplace(neighbor->id, spring_length);
+
             sf::Vector2f displacement = dt_sq_spring_stiffness_half * (1 - spring_length * inv_interaction_radius) * (spring_length - distance) * (neighbor->position - particle.position) / distance;
             particle.position -= displacement;
             neighbor->position += displacement;

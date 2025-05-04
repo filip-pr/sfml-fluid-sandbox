@@ -3,6 +3,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include <unordered_map>
+
 constexpr float STRESS_SMOOTHING = 0.6f;
 
 struct Particle
@@ -15,6 +17,8 @@ public:
     sf::Vector2f position;
     sf::Vector2f prev_position;
     sf::Vector2f velocity;
+
+    std::unordered_map<size_t, float> springs;
 
     float stress = 0.0f;
 

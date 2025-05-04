@@ -61,8 +61,7 @@ private:
     SpatialHashGrid grid_;
 
     std::vector<std::vector<Particle *>> particle_neighbors_;
-    std::unordered_map<std::tuple<size_t, size_t>, float, utils::TupleHash> springs_;
-
+    
     void move_particles();
     void update_neighbors();
     void adjust_apply_strings();

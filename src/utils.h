@@ -25,14 +25,6 @@ namespace utils
     {
         return a.x * b.x + a.y * b.y;
     }
-
-    struct TupleHash
-    {
-        std::size_t operator()(const std::tuple<size_t, size_t> &key) const
-        {
-            return std::get<0>(key) + HASH_PRIME * std::get<1>(key);
-        }
-    };
 }
 
 #endif
