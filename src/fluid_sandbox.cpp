@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 void FluidSandbox::clear_particles()
 {
@@ -99,8 +100,15 @@ void FluidSandbox::do_double_density_relaxation()
 
             float distance_sq = utils::distance_sq(particle.position, neighbor->position);
 
-            if (distance_sq >= interaction_radius_sq || distance_sq < 0.0001f)
+            if (distance_sq >= interaction_radius_sq)
                 continue;
+
+            if (distance_sq < 0.01f)
+            {
+                sf::Vector2f position_diff = neighbor->position - particle.position;
+                neighbor->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
+                continue;
+            }
 
             float distance = std::sqrt(distance_sq);
             float distance_ratio = distance * inv_interaction_radius;
@@ -127,8 +135,15 @@ void FluidSandbox::do_double_density_relaxation()
             sf::Vector2f position_diff = neighbor->position - particle.position;
             float distance_sq = position_diff.lengthSquared();
 
-            if (distance_sq >= interaction_radius_sq || distance_sq < 0.0001f)
+            if (distance_sq >= interaction_radius_sq)
                 continue;
+
+            if (distance_sq < 0.01f)
+            {
+                sf::Vector2f position_diff = neighbor->position - particle.position;
+                neighbor->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
+                continue;
+            }
 
             float distance = std::sqrt(distance_sq);
             float distance_ratio = distance * inv_interaction_radius;
@@ -175,6 +190,14 @@ void FluidSandbox::resolve_collisions()
             particle.position.y = max_y;
             particle.velocity.y *= -(1 - COLLISION_DAMPENING);
         }
+        if (std::isnan(particle.position.x))
+        {
+            particle.position.x = 0;
+        }
+        if (std::isnan(particle.position.y))
+        {
+            particle.position.y = 0;
+        }
     }
 }
 
@@ -217,17 +240,25 @@ void FluidSandbox::apply_viscosity()
 
             float distance_sq = utils::distance_sq(particle.position, neighbor->position);
 
-            if (distance_sq >= interaction_radius_sq || distance_sq < 0.0001f)
+            if (distance_sq >= interaction_radius_sq)
                 continue;
-            float distance = std::sqrt(distance_sq);
-            float distance_ratio = distance * inv_interaction_radius;
-            sf::Vector2f normalized_position_diff = (neighbor->position - particle.position) / distance;
 
-            float inward_velocity = utils::dot_product((particle.velocity - neighbor->velocity), normalized_position_diff);
-
-            if (inward_velocity > 0.0f)
+            if (distance_sq < 0.01f)
             {
-                sf::Vector2f impulse = dt_half * (1 - distance_ratio)*(params_.linear_viscosity * inward_velocity + params_.quadratic_viscosity * inward_velocity * inward_velocity) * normalized_position_diff;
+                sf::Vector2f position_diff = neighbor->position - particle.position;
+                neighbor->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
+                continue;
+            }
+
+            sf::Vector2f position_diff = (neighbor->position - particle.position);
+            float non_normal_inward_velocity = utils::dot_product((particle.velocity - neighbor->velocity), position_diff);
+
+            if (non_normal_inward_velocity > 0.0f)
+            {
+                float distance = std::sqrt(distance_sq);
+                float inward_velocity = std::min(non_normal_inward_velocity / distance, 1.0f);
+
+                sf::Vector2f impulse = dt_half * (1 - distance * inv_interaction_radius) * inward_velocity * (params_.linear_viscosity + params_.quadratic_viscosity * inward_velocity) * position_diff / distance;
                 particle.velocity -= impulse;
                 neighbor->velocity += impulse;
             }
