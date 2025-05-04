@@ -16,7 +16,7 @@ int main()
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
     window.setFramerateLimit(FRAMERATE_LIMIT);
 
-    SimulationParameters params = {1.0f, {0, 0.4f}, 60.0f, 6.0f, 0.5f, 0.5f, 0.5f, 0.5f, 1.0f, 0.2f, 0.5f};
+    SimulationParameters params = {1.0f, {0, 0.4f}, 60.0f, 6.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.2f, 0.5f};
 
     FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, params);
 

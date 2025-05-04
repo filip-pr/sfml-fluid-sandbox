@@ -87,8 +87,6 @@ void FluidSandbox::adjust_apply_strings()
     const float dt_plasticity = params_.plasticity * params_.dt;
     const float dt_sq_spring_stiffness_half = params_.spring_stiffness * params_.dt * params_.dt * 0.5f;
 
-
-
     size_t num_particles = particles_.size();
 
     for (size_t i = 0; i < num_particles; ++i)
@@ -193,8 +191,8 @@ void FluidSandbox::do_double_density_relaxation()
             float one_minus_ratio = 1.0f - distance_ratio;
             float one_minus_ratio_sq = one_minus_ratio * one_minus_ratio;
 
-            density += one_minus_ratio;
-            near_density += one_minus_ratio * one_minus_ratio;
+            density += one_minus_ratio_sq;
+            near_density += one_minus_ratio_sq * one_minus_ratio;
         }
 
         float pressure = params_.stiffness * (density - params_.rest_density);
@@ -217,7 +215,6 @@ void FluidSandbox::do_double_density_relaxation()
 
             if (distance_sq < 0.01f)
             {
-                sf::Vector2f position_diff = neighbor->position - particle.position;
                 neighbor->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
                 continue;
             }

@@ -21,7 +21,7 @@ namespace utils
     }
 
     template <typename T>
-    T dot_product(const sf::Vector2<T> &a, const sf::Vector2<T> &b)
+    inline T dot_product(const sf::Vector2<T> &a, const sf::Vector2<T> &b)
     {
         return a.x * b.x + a.y * b.y;
     }

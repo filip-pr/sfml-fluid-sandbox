@@ -12,7 +12,7 @@
 #include "spatial_hash_grid.h"
 
 constexpr float BASE_PARTICLE_SIZE = 5.0f;
-constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER = 10.0f;
+constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER = 15.0f;
 constexpr float BASE_PARTICLE_COLOR = 220.0f;
 constexpr float PARTICLE_STRESS_COLOR_MULTIPLIER = 100.0f;
 
@@ -61,7 +61,7 @@ private:
     SpatialHashGrid grid_;
 
     std::vector<std::vector<Particle *>> particle_neighbors_;
-    
+
     void move_particles();
     void update_neighbors();
     void adjust_apply_strings();
