@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 
 void FluidSandbox::clear_particles()
 {
@@ -93,12 +92,11 @@ void FluidSandbox::adjust_apply_strings()
     {
         size_t particle_id = reverse_calculation_order_ ? num_particles - i - 1 : i;
         auto &particle = particles_[particle_id];
-        float density = 0.0f;
-        float near_density = 0.0f;
 
         auto &neighbors = particle_neighbors_[particle_id];
 
         std::unordered_map<size_t, float> new_springs;
+        new_springs.reserve(neighbors.size());
 
         for (auto &&neighbor : neighbors)
         {
