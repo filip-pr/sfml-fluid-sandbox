@@ -7,7 +7,6 @@
 #include "utils.h"
 #include "particle.h"
 
-
 class SpatialHashGrid
 {
 public:
@@ -18,6 +17,7 @@ public:
 private:
     std::unordered_map<size_t, std::vector<Particle *>> grid_;
     size_t cell_size_ = 1;
+    size_t max_cell_size_ = 0;
 
     void insert(std::vector<Particle> &particles);
     void clear();
@@ -45,24 +45,34 @@ inline void SpatialHashGrid::clear()
 
 inline void SpatialHashGrid::insert(std::vector<Particle> &particles)
 {
+    size_t new_max_cell_size = 0;
     for (auto &&particle : particles)
     {
         size_t key = hash_position(particle.position);
-        grid_[key].emplace_back(&particle);
+        auto& cell = grid_[key];
+        if (cell.empty()) {
+            cell.reserve(max_cell_size_);
+        }
+        cell.push_back(&particle);
     }
+    for (auto &&cell : grid_)
+    {
+        new_max_cell_size = std::max(new_max_cell_size, cell.second.size());
+    }
+    max_cell_size_ = new_max_cell_size;
 }
 
 inline std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius) const
 {
     const float radius_sq = radius * radius;
 
-    std::vector<Particle *> result;
-    result.reserve(128);
-
     size_t min_cell_x = (center.x - radius) > 0 ? static_cast<size_t>(center.x - radius) / cell_size_ : 0;
     size_t max_cell_x = (center.x + radius) > 0 ? static_cast<size_t>(center.x + radius) / cell_size_ : 0;
     size_t min_cell_y = (center.y - radius) > 0 ? static_cast<size_t>(center.y - radius) / cell_size_ : 0;
     size_t max_cell_y = (center.y + radius) > 0 ? static_cast<size_t>(center.y + radius) / cell_size_ : 0;
+
+    std::vector<Particle *> result;
+    result.reserve((max_cell_x - min_cell_x + 1) * (max_cell_y - min_cell_y + 1) * max_cell_size_);
 
     for (size_t x = min_cell_x; x <= max_cell_x; ++x)
     {
@@ -91,6 +101,7 @@ inline void SpatialHashGrid::update(std::vector<Particle> &particles, size_t cel
     clear();
     cell_size_ = cell_size;
     insert(particles);
+
 }
 
 #endif

@@ -141,7 +141,10 @@ void FluidSandbox::adjust_apply_strings()
             }
             new_springs.emplace(neighbor->id, spring_length);
 
-            sf::Vector2f displacement = dt_sq_spring_stiffness_half * (1 - spring_length * inv_interaction_radius) * (spring_length - distance) * (neighbor->position - particle.position) / distance;
+            float displacement_magnitude = dt_sq_spring_stiffness_half * (1 - spring_length * inv_interaction_radius) * (spring_length - distance) / distance;
+
+            sf::Vector2f displacement = (neighbor->position - particle.position) * displacement_magnitude;
+
             particle.position -= displacement;
             neighbor->position += displacement;
         }
@@ -221,9 +224,9 @@ void FluidSandbox::do_double_density_relaxation()
             float distance_ratio = distance * inv_interaction_radius;
             float one_minus_ratio = 1.0f - distance_ratio;
 
-            float displacement_magnitude = dt_sq_half * (pressure * one_minus_ratio + near_pressure * (one_minus_ratio * one_minus_ratio));
+            float displacement_magnitude = dt_sq_half * (pressure * one_minus_ratio + near_pressure * (one_minus_ratio * one_minus_ratio)) / distance;
 
-            sf::Vector2f displacement = position_diff * (displacement_magnitude / distance);
+            sf::Vector2f displacement = position_diff * displacement_magnitude;
 
             neighbor->position += displacement;
             total_displacement -= displacement;
@@ -333,7 +336,10 @@ void FluidSandbox::apply_viscosity()
                 float distance = std::sqrt(distance_sq);
                 float inward_velocity = std::min(non_normal_inward_velocity / distance, 1.0f);
 
-                sf::Vector2f impulse = dt_half * (1 - distance * inv_interaction_radius) * inward_velocity * (params_.linear_viscosity + params_.quadratic_viscosity * inward_velocity) * position_diff / distance;
+                float impulse_magnitude = dt_half * (1 - distance * inv_interaction_radius) * inward_velocity * (params_.linear_viscosity + params_.quadratic_viscosity * inward_velocity) / distance;
+
+                sf::Vector2f impulse = position_diff * impulse_magnitude;
+
                 particle.velocity -= impulse;
                 neighbor->velocity += impulse;
             }

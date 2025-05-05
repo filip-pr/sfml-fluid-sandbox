@@ -25,7 +25,7 @@ public:
     Particle(sf::Vector2f position) : position(position), prev_position(position), velocity(0, 0) {}
     Particle(sf::Vector2f position, sf::Vector2f velocity) : position(position), prev_position(position), velocity(velocity) {}
 
-    void update(float dt)
+    inline void update(float dt)
     {
         prev_position = position;
         position += velocity * dt;
