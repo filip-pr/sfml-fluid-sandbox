@@ -54,8 +54,10 @@ inline void SpatialHashGrid::insert(std::vector<Particle> &particles)
 
 inline std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius) const
 {
-    std::vector<Particle *> result;
     const float radius_sq = radius * radius;
+
+    std::vector<Particle *> result;
+    result.reserve(128);
 
     size_t min_cell_x = (center.x - radius) > 0 ? static_cast<size_t>(center.x - radius) / cell_size_ : 0;
     size_t max_cell_x = (center.x + radius) > 0 ? static_cast<size_t>(center.x + radius) / cell_size_ : 0;
