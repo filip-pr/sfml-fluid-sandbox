@@ -15,12 +15,8 @@ FetchContent_Declare(SFML
 FetchContent_MakeAvailable(SFML)
 
 set(MY_EXE "fluid_simulation_sandbox")
-add_executable(${MY_EXE} "./main.cpp"
-    "./utils.h"
-    "./particle.h"
-    "./fluid_sandbox.h" "./fluid_sandbox.cpp"
-    "./spatial_hash_grid.h"
-)
+file(GLOB SRC_FILES "./src/*.cpp" "./src/*.h")
+add_executable(${MY_EXE} ${SRC_FILES})
 
 set_property(TARGET ${MY_EXE} PROPERTY CXX_STANDARD 23)
 target_link_libraries(${MY_EXE} PRIVATE SFML::Graphics SFML::Window SFML::System)

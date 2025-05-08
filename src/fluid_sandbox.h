@@ -10,49 +10,62 @@
 
 #include "particle.h"
 #include "spatial_hash_grid.h"
+#include "controls.h"
 
-constexpr float BASE_PARTICLE_SIZE = 5.0f;
-constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER = 15.0f;
-constexpr float BASE_PARTICLE_COLOR = 220.0f;
-constexpr float PARTICLE_STRESS_COLOR_MULTIPLIER = 100.0f;
+constexpr unsigned int SIDEBAR_SIZE = 350;
 
-constexpr float COLLISION_DAMPENING = 1.0f;
+constexpr char const *FONT_PATH = "../../assets/Roboto-Regular.ttf";
+constexpr int FONT_SIZE = 15;
 
 struct SimulationParameters
 {
-    float dt;
-    sf::Vector2f gravity;
-    float interaction_radius;
-    float rest_density;
-    float stiffness;
-    float near_stiffness;
-    float linear_viscosity;
-    float quadratic_viscosity;
-    float plasticity;
-    float yield_ratio;
-    float spring_stiffness;
+    float simulation_speed = SIMULATION_SPEED_DEFAULT;
+    float gravity_x = GRAVITY_X_DEFAULT;
+    float gravity_y = GRAVITY_Y_DEFAULT;
+    float edge_bounciness = EDGE_BOUNCINESS_DEFAULT;
+    float interaction_radius = INTERACTION_RADIUS_DEFAULT;
+    float rest_density = REST_DENSITY_DEFAULT;
+    float stiffness = STIFFNESS_DEFAULT;
+    float near_stiffness = NEAR_STIFFNESS_DEFAULT;
+    float linear_viscosity = LINEAR_VISCOSITY_DEFAULT;
+    float quadratic_viscosity = QUADRATIC_VISCOSITY_DEFAULT;
+    float plasticity = PLASTICITY_DEFAULT;
+    float yield_ratio = YIELD_RATIO_DEFAULT;
+    float spring_stiffness = SPRING_STIFFNESS_DEFAULT;
+
+    float control_radius = CONTROL_RADIUS_DEFAULT;
+    float particle_spawn_rate = PARTICLE_SPAWN_RATE_DEFAULT;
+
+    float base_particle_size = BASE_PARTICLE_SIZE_DEFAULT;
+    float particle_stress_size_multiplier = PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT;
+    float base_particle_color = BASE_PARTICLE_COLOR_DEFAULT;
+    float particle_stress_color_multiplier = PARTICLE_STRESS_COLOR_MULTIPLIER_DEFAULT;
 };
 
 class FluidSandbox : public sf::Drawable
 {
 public:
-    FluidSandbox(sf::Vector2u size, SimulationParameters &params) : size_(size), params_(params) {}
+    FluidSandbox(sf::Vector2u size) : size_(size - sf::Vector2u({std::min(SIDEBAR_SIZE, size.x), 0})), font_(FONT_PATH) {}
 
     size_t particle_count() const { return particles_.size(); }
-    void resize(sf::Vector2u size) { size_ = size; }
-    void update_params(SimulationParameters &params) { params_ = params; }
+    void resize(sf::Vector2u size) { size_ = size - sf::Vector2u({std::min(SIDEBAR_SIZE, size.x), 0}); }
+    SimulationParameters &get_params() { return params_; }
 
     void clear_particles();
-    void add_particles(sf::Vector2f position, float radius, size_t number);
-    void remove_particles(sf::Vector2f position, float radius);
+    void add_particles(sf::Vector2f position);
+    void remove_particles(sf::Vector2f position);
     void push_particles(sf::Vector2f velocity);
 
-    void update();
+    void update(float dt);
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
 private:
     sf::Vector2u size_;
     SimulationParameters params_;
+    sf::Font font_;
+
+    float dt_ = 0.0f;
+    float frame_rate_ = 0.0f;
 
     bool reverse_calculation_order_ = false;
 

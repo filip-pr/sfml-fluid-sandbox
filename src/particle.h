@@ -5,7 +5,7 @@
 
 #include <unordered_map>
 
-constexpr float STRESS_SMOOTHING = 0.6f;
+constexpr float STRESS_SMOOTHING = 0.7f; // To prevent flickering to much from changing computation order
 
 struct Particle
 {

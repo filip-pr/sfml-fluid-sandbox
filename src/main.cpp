@@ -1,31 +1,68 @@
 #include <SFML/Graphics.hpp>
 
-#include <iostream>
-
 #include "fluid_sandbox.h"
+#include "controls.h"
+
+#include <algorithm>
+#include <limits>
+
+#include <iostream>
 
 constexpr char const *WINDOW_TITLE = "Fluid Simulation Sandbox";
 
-constexpr unsigned int DEFAULT_WINDOW_WIDTH = 1200;
-constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 700;
+constexpr unsigned int DEFAULT_WINDOW_WIDTH = 1500;
+constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 800;
 
-constexpr unsigned int FRAMERATE_LIMIT = 120;
+constexpr size_t MAX_FRAME_RATE = 100;
+
+sf::Keyboard::Key convert_key(char key)
+{
+    if (key >= 'A' && key <= 'Z')
+    {
+        return static_cast<sf::Keyboard::Key>(key - 'A' + static_cast<char>(sf::Keyboard::Key::A));
+    }
+    else if (key >= '0' && key <= '9')
+    {
+        return static_cast<sf::Keyboard::Key>(key - '0' + static_cast<char>(sf::Keyboard::Key::Num0));
+    }
+    return sf::Keyboard::Key::Unknown;
+}
+
+void adjust_param(
+    float &param_value,
+    char key,
+    float step,
+    bool increase,
+    bool decrease,
+    float min_val = std::numeric_limits<float>::min(),
+    float max_val = std::numeric_limits<float>::max())
+{
+    if (sf::Keyboard::isKeyPressed(convert_key(key)))
+    {
+        if (increase)
+        {
+            param_value += step;
+        }
+        if (decrease)
+        {
+            param_value -= step;
+        }
+        param_value = std::max(min_val, param_value);
+        param_value = std::min(max_val, param_value);
+    }
+}
 
 int main()
 {
     auto window = sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}), WINDOW_TITLE);
-    window.setFramerateLimit(FRAMERATE_LIMIT);
+    window.setFramerateLimit(MAX_FRAME_RATE);
 
-    SimulationParameters params = {1.0f, {0, 0.4f}, 60.0f, 6.0f, 0.5f, 0.5f, 0.5f, 0.5f, 1.0f, 0.2f, 0.5f};
-
-    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT}, params);
+    FluidSandbox sandbox({DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT});
 
     sf::Clock clock;
-    int counter = 1;
     auto window_position = window.getPosition();
     while (window.isOpen())
     {
-        counter++;
         while (const std::optional event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
@@ -38,28 +75,20 @@ int main()
                 sandbox.resize({resized->size.x, resized->size.y});
             }
         }
-
-        if (counter % FRAMERATE_LIMIT == 0)
-        {
-            std::cout << "FPS: " << FRAMERATE_LIMIT / clock.restart().asSeconds()
-                      << ", Particle count: " << sandbox.particle_count() << std::endl;
-            counter = 0;
-        }
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            sandbox.add_particles(static_cast<sf::Vector2f>(mouse_position), 50.0f, 5);
+            sandbox.add_particles(static_cast<sf::Vector2f>(mouse_position));
         }
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
-            sandbox.remove_particles(static_cast<sf::Vector2f>(mouse_position), 50.0f);
+            sandbox.remove_particles(static_cast<sf::Vector2f>(mouse_position));
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
         {
             sandbox.clear_particles();
         }
-
         auto new_window_position = window.getPosition();
         if (window_position != new_window_position)
         {
@@ -67,7 +96,34 @@ int main()
             window_position = new_window_position;
         }
 
-        sandbox.update();
+        bool increase = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Add);
+        bool decrease = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Subtract);
+
+        float dt = clock.restart().asSeconds();
+
+        adjust_param(sandbox.get_params().simulation_speed, SIMULATION_SPEED_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().gravity_x, GRAVITY_X_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().gravity_y, GRAVITY_Y_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().edge_bounciness, EDGE_BOUNCINESS_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().interaction_radius, INTERACTION_RADIUS_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().rest_density, REST_DENSITY_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().stiffness, STIFFNESS_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().near_stiffness, NEAR_STIFFNESS_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().linear_viscosity, LINEAR_VISCOSITY_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().quadratic_viscosity, QUADRATIC_VISCOSITY_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().plasticity, PLASTICITY_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().yield_ratio, YIELD_RATIO_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().spring_stiffness, SPRING_STIFFNESS_KEY, dt, increase, decrease);
+
+        adjust_param(sandbox.get_params().control_radius, CONTROL_RADIUS_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().particle_spawn_rate, PARTICLE_SPAWN_RATE_KEY, dt, increase, decrease);
+
+        adjust_param(sandbox.get_params().base_particle_size, BASE_PARTICLE_SIZE_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().particle_stress_size_multiplier, PARTICLE_STRESS_SIZE_MULTIPLIER_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().base_particle_color, BASE_PARTICLE_COLOR_KEY, dt, increase, decrease);
+        adjust_param(sandbox.get_params().particle_stress_color_multiplier, PARTICLE_STRESS_COLOR_MULTIPLIER_KEY, dt, increase, decrease);
+
+        sandbox.update(dt);
         window.clear();
         window.draw(sandbox);
         window.display();
