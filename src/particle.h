@@ -22,8 +22,7 @@ public:
 
     float stress = 0.0f;
 
-    Particle(sf::Vector2f position) : position(position), prev_position(position), velocity(0, 0) {}
-    Particle(sf::Vector2f position, sf::Vector2f velocity) : position(position), prev_position(position), velocity(velocity) {}
+    Particle(sf::Vector2f position, sf::Vector2f velocity = {0.0f, 0.0f}) : position(position), prev_position(position), velocity(velocity) {}
 
     inline void update(float dt)
     {

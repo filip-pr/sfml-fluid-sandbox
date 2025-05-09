@@ -5,55 +5,60 @@
 #include <vector>
 
 #include "utils.h"
-#include "particle.h"
 
+template <typename T>
 class SpatialHashGrid
 {
 public:
-    void update(std::vector<Particle> &particles, size_t cell_size);
+    void update(std::vector<T> &objects, size_t cell_size);
 
-    std::vector<Particle *> query(sf::Vector2f center, float radius) const;
+    std::vector<T *> query(sf::Vector2f center, float radius) const;
 
 private:
-    std::unordered_map<size_t, std::vector<Particle *>> grid_;
+    std::unordered_map<size_t, std::vector<T *>> grid_;
     size_t cell_size_ = 1;
     size_t max_cell_size_ = 0;
 
-    void insert(std::vector<Particle> &particles);
+    void insert(std::vector<T> &objects);
     void clear();
 
     size_t hash_position(sf::Vector2f position) const;
     size_t hash_cell(size_t cell_x, size_t cell_y) const;
 };
 
-inline size_t SpatialHashGrid::hash_position(const sf::Vector2f position) const
+template <typename T>
+inline size_t SpatialHashGrid<T>::hash_position(const sf::Vector2f position) const
 {
     size_t cell_x = (position.x >= 0) ? static_cast<size_t>(position.x / cell_size_) : 0;
     size_t cell_y = (position.y >= 0) ? static_cast<size_t>(position.y / cell_size_) : 0;
     return hash_cell(cell_x, cell_y);
 }
 
-inline size_t SpatialHashGrid::hash_cell(size_t cell_x, size_t cell_y) const
+template <typename T>
+inline size_t SpatialHashGrid<T>::hash_cell(size_t cell_x, size_t cell_y) const
 {
     return cell_x + cell_y * utils::HASH_PRIME;
 }
 
-inline void SpatialHashGrid::clear()
+template <typename T>
+inline void SpatialHashGrid<T>::clear()
 {
     grid_.clear();
 }
 
-inline void SpatialHashGrid::insert(std::vector<Particle> &particles)
+template <typename T>
+inline void SpatialHashGrid<T>::insert(std::vector<T> &objects)
 {
     size_t new_max_cell_size = 0;
-    for (auto &&particle : particles)
+    for (auto &&object : objects)
     {
-        size_t key = hash_position(particle.position);
-        auto& cell = grid_[key];
-        if (cell.empty()) {
+        size_t key = hash_position(object.position);
+        auto &cell = grid_[key];
+        if (cell.empty())
+        {
             cell.reserve(max_cell_size_);
         }
-        cell.push_back(&particle);
+        cell.push_back(&object);
     }
     for (auto &&cell : grid_)
     {
@@ -62,8 +67,14 @@ inline void SpatialHashGrid::insert(std::vector<Particle> &particles)
     max_cell_size_ = new_max_cell_size;
 }
 
-inline std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float radius) const
+template <typename T>
+inline std::vector<T *> SpatialHashGrid<T>::query(sf::Vector2f center, float radius) const
 {
+    if (cell_size_ == 0)
+    {
+        return std::vector<T *>();
+    }
+
     const float radius_sq = radius * radius;
 
     size_t min_cell_x = (center.x - radius) > 0 ? static_cast<size_t>(center.x - radius) / cell_size_ : 0;
@@ -71,7 +82,8 @@ inline std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float
     size_t min_cell_y = (center.y - radius) > 0 ? static_cast<size_t>(center.y - radius) / cell_size_ : 0;
     size_t max_cell_y = (center.y + radius) > 0 ? static_cast<size_t>(center.y + radius) / cell_size_ : 0;
 
-    std::vector<Particle *> result;
+    std::vector<T *> result;
+
     result.reserve((max_cell_x - min_cell_x + 1) * (max_cell_y - min_cell_y + 1) * max_cell_size_);
 
     for (size_t x = min_cell_x; x <= max_cell_x; ++x)
@@ -84,11 +96,11 @@ inline std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float
             if (it == grid_.end())
                 continue;
 
-            for (const auto &particle : it->second)
+            for (const auto &object : it->second)
             {
-                if (utils::distance_sq(center, particle->position) <= radius_sq)
+                if (utils::distance_sq(center, object->position) <= radius_sq)
                 {
-                    result.push_back(particle);
+                    result.push_back(object);
                 }
             }
         }
@@ -96,12 +108,12 @@ inline std::vector<Particle *> SpatialHashGrid::query(sf::Vector2f center, float
     return result;
 }
 
-inline void SpatialHashGrid::update(std::vector<Particle> &particles, size_t cell_size)
+template <typename T>
+inline void SpatialHashGrid<T>::update(std::vector<T> &objects, size_t cell_size)
 {
     clear();
     cell_size_ = cell_size;
-    insert(particles);
-
+    insert(objects);
 }
 
 #endif

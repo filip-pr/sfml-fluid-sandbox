@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "particle.h"
+#include "object.h"
 #include "spatial_hash_grid.h"
 
 inline constexpr float SIMULATION_SPEED_DEFAULT = 100.0f;
@@ -25,6 +26,8 @@ inline constexpr float PLASTICITY_DEFAULT = 0.2f;
 inline constexpr float YIELD_RATIO_DEFAULT = 0.2f;
 inline constexpr float SPRING_STIFFNESS_DEFAULT = 0.0f;
 inline constexpr float CONTROL_RADIUS_DEFAULT = 50.0f;
+inline constexpr float OBJECT_RADIUS_DEFAULT = 30.0f;
+inline constexpr float OBJECT_MASS_DEFAULT = 10.0f;
 inline constexpr float PARTICLE_SPAWN_RATE_DEFAULT = 3.0f;
 inline constexpr float BASE_PARTICLE_SIZE_DEFAULT = 5.0f;
 inline constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT = 7.0f;
@@ -49,6 +52,8 @@ struct SimulationParameters
 
     float control_radius = CONTROL_RADIUS_DEFAULT;
     float particle_spawn_rate = PARTICLE_SPAWN_RATE_DEFAULT;
+    float object_radius = OBJECT_RADIUS_DEFAULT;
+    float object_mass = OBJECT_MASS_DEFAULT;
 
     float base_particle_size = BASE_PARTICLE_SIZE_DEFAULT;
     float particle_stress_size_multiplier = PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT;
@@ -62,14 +67,18 @@ public:
     FluidSandbox(sf::Vector2u size) : size_(size) {}
 
     size_t particle_count() const { return particles_.size(); }
+    size_t object_count() const { return objects_.size(); }
     sf::Vector2u size() const { return size_; }
     SimulationParameters &params() { return params_; }
     void resize(sf::Vector2u size) { size_ = size; }
 
-    void clear_particles();
+    void clear();
     void add_particles(sf::Vector2f position);
+    void add_object(sf::Vector2f position);
     void remove_particles(sf::Vector2f position);
-    void push_particles(sf::Vector2f velocity);
+    void remove_object(sf::Vector2f position);
+    void toggle_lock_object(sf::Vector2f position);
+    void push_everything(sf::Vector2f velocity);
 
     void update(float dt);
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
@@ -84,12 +93,15 @@ private:
     bool reverse_calculation_order_ = false;
 
     std::vector<Particle> particles_;
-    std::vector<Particle> new_particles_;
-    SpatialHashGrid grid_;
+    std::vector<Object> objects_;
+
+    SpatialHashGrid<Particle> particle_grid_;
+    SpatialHashGrid<Object> object_grid_;
+    float max_object_radius = 0.0f;
 
     std::vector<std::vector<Particle *>> particle_neighbors_;
 
-    void move_particles();
+    void move_everything();
     void update_neighbors();
     void adjust_apply_strings();
     void do_double_density_relaxation();

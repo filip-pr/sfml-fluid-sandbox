@@ -21,6 +21,9 @@ int main()
 
     sf::Clock clock;
     auto window_position = window.getPosition();
+
+    bool lock_pressed = false;
+
     while (window.isOpen())
     {
         while (const std::optional event = window.pollEvent())
@@ -35,24 +38,44 @@ int main()
                 sandbox.resize({(resized->size.x > SIDEBAR_WIDTH ? resized->size.x - SIDEBAR_WIDTH : 0), resized->size.y});
             }
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
             sandbox.add_particles(static_cast<sf::Vector2f>(mouse_position));
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
             sandbox.remove_particles(static_cast<sf::Vector2f>(mouse_position));
         }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::G))
+        {
+            const auto mouse_position = sf::Mouse::getPosition(window);
+            sandbox.add_object(static_cast<sf::Vector2f>(mouse_position));
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::H))
+        {
+            const auto mouse_position = sf::Mouse::getPosition(window);
+            sandbox.remove_object(static_cast<sf::Vector2f>(mouse_position));
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J))
+        {
+            lock_pressed = true;
+        }
+        else if (lock_pressed)
+        {
+            lock_pressed = false;
+            const auto mouse_position = sf::Mouse::getPosition(window);
+            sandbox.toggle_lock_object(static_cast<sf::Vector2f>(mouse_position));
+        }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
         {
-            sandbox.clear_particles();
+            sandbox.clear();
         }
         auto new_window_position = window.getPosition();
         if (window_position != new_window_position)
         {
-            sandbox.push_particles(static_cast<sf::Vector2f>(window_position - new_window_position) / 10.0f);
+            sandbox.push_everything(static_cast<sf::Vector2f>(window_position - new_window_position) / 10.0f);
             window_position = new_window_position;
         }
 

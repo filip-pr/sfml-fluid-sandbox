@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <math.h>
 
 #include "controls.h"
 #include "fluid_sandbox.h"
@@ -47,7 +48,7 @@ ControlsDisplay::ControlsDisplay(FluidSandbox &sandbox, unsigned int width) : sa
     {
         throw std::runtime_error("Failed to load font");
     }
-    params_.emplace_back(Param{"Sim Speed", '1', SIMULATION_SPEED_DEFAULT, sandbox_.params().simulation_speed, 50.0f, 0.01f});
+    params_.emplace_back(Param{"Sim Speed", '1', SIMULATION_SPEED_DEFAULT, sandbox_.params().simulation_speed, 50.0f, 0.01f, 100.0f});
     params_.emplace_back(Param{"Gravity X", '2', GRAVITY_X_DEFAULT, sandbox_.params().gravity_x, 0.5f});
     params_.emplace_back(Param{"Gravity Y", '3', GRAVITY_Y_DEFAULT, sandbox_.params().gravity_y, 0.5f});
     params_.emplace_back(Param{"Edge Bounciness", '4', EDGE_BOUNCINESS_DEFAULT, sandbox_.params().edge_bounciness, 0.5f, 0.0f, 1.0f});
@@ -62,10 +63,12 @@ ControlsDisplay::ControlsDisplay(FluidSandbox &sandbox, unsigned int width) : sa
     params_.emplace_back(Param{"Spring Stiffness", 'E', SPRING_STIFFNESS_DEFAULT, sandbox_.params().spring_stiffness, 0.5f, 0.0f, 1.0f});
     params_.emplace_back(Param{"Control Radius", 'R', CONTROL_RADIUS_DEFAULT, sandbox_.params().control_radius, 50.0f, 0.01f});
     params_.emplace_back(Param{"Spawn Rate", 'T', PARTICLE_SPAWN_RATE_DEFAULT, sandbox_.params().particle_spawn_rate, 5.0f, 0.01f});
-    params_.emplace_back(Param{"Base Size", 'Y', BASE_PARTICLE_SIZE_DEFAULT, sandbox_.params().base_particle_size, 5.0f, 0.0f});
-    params_.emplace_back(Param{"Stress Size Mult", 'U', PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT, sandbox_.params().particle_stress_size_multiplier, 5.0f, 0.0f});
-    params_.emplace_back(Param{"Base Color", 'I', BASE_PARTICLE_COLOR_DEFAULT, sandbox_.params().base_particle_color, 50.0f, 0.0f});
-    params_.emplace_back(Param{"Stress Color Mult", 'O', PARTICLE_STRESS_COLOR_MULTIPLIER_DEFAULT, sandbox_.params().particle_stress_color_multiplier, 50.0f, 0.0f});
+    params_.emplace_back(Param{"Object Radius", 'Y', OBJECT_RADIUS_DEFAULT, sandbox_.params().object_radius, 50.0f, 0.01f});
+    params_.emplace_back(Param{"Object Mass", 'U', OBJECT_MASS_DEFAULT, sandbox_.params().object_mass, 50.0f, 0.01f});
+    params_.emplace_back(Param{"Base Size", 'I', BASE_PARTICLE_SIZE_DEFAULT, sandbox_.params().base_particle_size, 5.0f, 0.0f});
+    params_.emplace_back(Param{"Stress Size Mult", 'O', PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT, sandbox_.params().particle_stress_size_multiplier, 5.0f, 0.0f});
+    params_.emplace_back(Param{"Base Color", 'P', BASE_PARTICLE_COLOR_DEFAULT, sandbox_.params().base_particle_color, 50.0f, 0.0f});
+    params_.emplace_back(Param{"Stress Color Mult", 'A', PARTICLE_STRESS_COLOR_MULTIPLIER_DEFAULT, sandbox_.params().particle_stress_color_multiplier, 50.0f, 0.0f});
 }
 
 void ControlsDisplay::update(float dt)
@@ -80,7 +83,7 @@ void ControlsDisplay::update(float dt)
 void ControlsDisplay::draw_text(const std::string &text, sf::Text::Style style, sf::RenderTarget &target, sf::Text &text_template, float &y_offset) const
 {
     text_template.setString(text);
-    text_template.setPosition({sandbox_.size().x + TEXT_X_OFFSET, y_offset});
+    text_template.setPosition({sandbox_.size().x + TEXT_X_OFFSET, std::round(y_offset)});
     text_template.setStyle(style);
     target.draw(text_template);
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
@@ -92,7 +95,7 @@ void ControlsDisplay::draw_info(const std::string &text, float value, sf::Render
     text_template.setStyle(sf::Text::Regular);
     ss << text << ": " << std::fixed << std::setprecision(2) << value;
     text_template.setString(ss.str());
-    text_template.setPosition({sandbox_.size().x + TEXT_X_OFFSET, y_offset});
+    text_template.setPosition({sandbox_.size().x + TEXT_X_OFFSET, std::round(y_offset)});
     target.draw(text_template);
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
 }
@@ -104,7 +107,7 @@ void ControlsDisplay::draw_info(const Param &param, sf::RenderTarget &target, sf
     ss << param.name << " (key: " << param.key << ")"
        << ": " << std::fixed << std::setprecision(2) << param.value;
     text_template.setString(ss.str());
-    text_template.setPosition({sandbox_.size().x + TEXT_X_OFFSET, y_offset});
+    text_template.setPosition({sandbox_.size().x + TEXT_X_OFFSET, std::round(y_offset)});
     target.draw(text_template);
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
 }
@@ -127,6 +130,7 @@ void ControlsDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) co
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
 
     draw_info("Particles", static_cast<float>(sandbox_.particle_count()), target, text_template, y_offset);
+    draw_info("Objects", static_cast<float>(sandbox_.object_count()), target, text_template, y_offset);
     draw_info("Frame Rate", 1/dt_, target, text_template, y_offset);
 
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
@@ -135,9 +139,12 @@ void ControlsDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) co
 
     draw_text("<key> & '+' or '-' to Adjust Param", sf::Text::Regular, target, text_template, y_offset);
     draw_text("<key> & 'backspace' to Reset Param", sf::Text::Regular, target, text_template, y_offset);
-    draw_text("S - Spawn Particles", sf::Text::Regular, target, text_template, y_offset);
-    draw_text("D - Delete Particles", sf::Text::Regular, target, text_template, y_offset);
-    draw_text("Space - Clear Particles", sf::Text::Regular, target, text_template, y_offset);
+    draw_text("D - Spawn Particles", sf::Text::Regular, target, text_template, y_offset);
+    draw_text("F - Delete Particles", sf::Text::Regular, target, text_template, y_offset);
+    draw_text("G - Spawn an Object", sf::Text::Regular, target, text_template, y_offset);
+    draw_text("H - Delete an Object", sf::Text::Regular, target, text_template, y_offset);
+    draw_text("J - Lock/Unlock an Object", sf::Text::Regular, target, text_template, y_offset);
+    draw_text("Space - Clear Particles and Objects", sf::Text::Regular, target, text_template, y_offset);
 
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
     draw_text("Simulation Params", sf::Text::Bold, target, text_template, y_offset);

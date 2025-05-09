@@ -5,9 +5,10 @@
 #include "utils.h"
 #include "controls.h"
 
-void FluidSandbox::clear_particles()
+void FluidSandbox::clear()
 {
     particles_.clear();
+    objects_.clear();
 }
 
 void FluidSandbox::add_particles(sf::Vector2f position)
@@ -27,6 +28,16 @@ void FluidSandbox::add_particles(sf::Vector2f position)
     }
 }
 
+void FluidSandbox::add_object(sf::Vector2f position)
+{
+    auto coliding_objects = object_grid_.query(position, max_object_radius + params_.object_radius);
+    if (coliding_objects.size() > 0)
+    {
+        return;
+    }
+    objects_.emplace_back(position, params_.object_radius, params_.object_mass);
+}
+
 void FluidSandbox::remove_particles(sf::Vector2f position)
 {
     float radius_sq = params_.control_radius * params_.control_radius;
@@ -38,18 +49,45 @@ void FluidSandbox::remove_particles(sf::Vector2f position)
     particles_.erase(it, particles_.end());
 }
 
-void FluidSandbox::push_particles(sf::Vector2f velocity)
+void FluidSandbox::remove_object(sf::Vector2f position)
+{
+    float radius_sq = params_.control_radius * params_.control_radius;
+    auto it = std::remove_if(objects_.begin(), objects_.end(),
+                             [position, radius_sq](const Object &object)
+                             {
+                                 return utils::distance_sq(object.position, position) < radius_sq;
+                             });
+    objects_.erase(it, objects_.end());
+}
+
+void FluidSandbox::toggle_lock_object(sf::Vector2f position)
+{
+    float radius_sq = params_.control_radius * params_.control_radius;
+    for (auto &&object : objects_)
+    {
+        if (utils::distance_sq(object.position, position) < radius_sq)
+        {
+            object.is_locked = !object.is_locked;
+        }
+    }
+}
+
+void FluidSandbox::push_everything(sf::Vector2f velocity)
 {
     for (auto &&particle : particles_)
     {
         particle.velocity += velocity;
+    }
+    for (auto &&object : objects_)
+    {
+        object.velocity += velocity;
     }
 }
 
 void FluidSandbox::update(float dt)
 {
     dt_ = std::min(dt * params_.simulation_speed, 1.0f); // to prevent instability
-    move_particles();
+    move_everything();
     update_neighbors();
     adjust_apply_strings();
     do_double_density_relaxation();
@@ -60,13 +98,24 @@ void FluidSandbox::update(float dt)
     reverse_calculation_order_ = !reverse_calculation_order_;
 }
 
-void FluidSandbox::move_particles()
+void FluidSandbox::move_everything()
 {
     for (auto &&particle : particles_)
     {
         particle.update(dt_);
     }
-    grid_.update(particles_, params_.interaction_radius);
+    particle_grid_.update(particles_, params_.interaction_radius);
+
+    max_object_radius = 0.0f;
+    for (auto &&object : objects_)
+    {
+        object.update(dt_);
+        if (object.radius > max_object_radius)
+        {
+            max_object_radius = object.radius;
+        }
+    }
+    object_grid_.update(objects_, max_object_radius);
 }
 
 void FluidSandbox::update_neighbors()
@@ -78,7 +127,7 @@ void FluidSandbox::update_neighbors()
     size_t particle_id = 0;
     for (auto &&particle : particles_)
     {
-        particle_neighbors_[particle_id] = grid_.query(particle.position, params_.interaction_radius);
+        particle_neighbors_[particle_id] = particle_grid_.query(particle.position, params_.interaction_radius);
         ++particle_id;
     }
 }
@@ -281,6 +330,31 @@ void FluidSandbox::resolve_collisions()
             particle.position.y = 0;
         }
     }
+
+    for (auto &&object : objects_)
+    {
+        if (object.position.x - object.radius < min_x)
+        {
+            object.position.x = min_x + object.radius;
+            object.velocity.x *= -params_.edge_bounciness;
+        }
+        else if (object.position.x + object.radius > max_x)
+        {
+            object.position.x = max_x - object.radius;
+            object.velocity.x *= -params_.edge_bounciness;
+        }
+
+        if (object.position.y - object.radius < min_y)
+        {
+            object.position.y = min_y + object.radius;
+            object.velocity.y *= -params_.edge_bounciness;
+        }
+        else if (object.position.y + object.radius > max_y)
+        {
+            object.position.y = max_y - object.radius;
+            object.velocity.y *= -params_.edge_bounciness;
+        }
+    }
 }
 
 void FluidSandbox::recalculate_velocity()
@@ -298,6 +372,11 @@ void FluidSandbox::apply_gravity()
     {
         particle.velocity.x += params_.gravity_x * dt_;
         particle.velocity.y += params_.gravity_y * dt_;
+    }
+    for (auto &&object : objects_)
+    {
+        object.velocity.x += params_.gravity_x * dt_;
+        object.velocity.y += params_.gravity_y * dt_;
     }
 }
 
@@ -379,4 +458,35 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
 
     states.blendMode = sf::BlendMax;
     target.draw(particle_vertices, states);
+    states.blendMode = sf::BlendAlpha;
+
+    sf::VertexArray object_vertices(sf::PrimitiveType::Triangles, objects_.size() * CIRCLE_DRAW_SEGMENTS * 3);
+
+    for (size_t i = 0; i < objects_.size(); ++i)
+    {
+        const auto &object = objects_[i];
+        sf::Color object_color = object.is_locked ? sf::Color(128, 0, 0) : sf::Color(0, 128, 0);
+
+        sf::Vector2f center_pos = object.position;
+
+        for (size_t j = 0; j < CIRCLE_DRAW_SEGMENTS; ++j)
+        {
+            float angle1 = static_cast<float>(j) / CIRCLE_DRAW_SEGMENTS * 2.0f * M_PI;
+            float angle2 = static_cast<float>(j + 1) / CIRCLE_DRAW_SEGMENTS * 2.0f * M_PI;
+
+            sf::Vector2f p1 = object.position + sf::Vector2f(std::cos(angle1) * object.radius, std::sin(angle1) * object.radius);
+            sf::Vector2f p2 = object.position + sf::Vector2f(std::cos(angle2) * object.radius, std::sin(angle2) * object.radius);
+
+            size_t vertex_idx = (i * CIRCLE_DRAW_SEGMENTS + j) * 3;
+
+            object_vertices[vertex_idx].position = object.position;
+            object_vertices[vertex_idx + 1].position = p1;
+            object_vertices[vertex_idx + 2].position = p2;
+
+            object_vertices[vertex_idx].color = object_color;
+            object_vertices[vertex_idx + 1].color = object_color;
+            object_vertices[vertex_idx + 2].color = object_color;
+        }
+    }
+    target.draw(object_vertices, states);
 }
