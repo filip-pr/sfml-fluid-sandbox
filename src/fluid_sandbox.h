@@ -34,6 +34,8 @@ inline constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT = 7.0f;
 inline constexpr float BASE_PARTICLE_COLOR_DEFAULT = 255.0f;
 inline constexpr float PARTICLE_STRESS_COLOR_MULTIPLIER_DEFAULT = 125.0f;
 
+constexpr size_t CIRCLE_DRAW_SEGMENTS = 20;
+
 struct SimulationParameters
 {
     float simulation_speed = SIMULATION_SPEED_DEFAULT;

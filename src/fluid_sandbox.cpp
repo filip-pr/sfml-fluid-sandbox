@@ -333,6 +333,65 @@ void FluidSandbox::resolve_collisions()
 
     for (auto &&object : objects_)
     {
+        auto neighbors = object_grid_.query(object.position, object.radius + max_object_radius);
+        for (auto &&neighbor : neighbors)
+        {
+            if (&object == neighbor || object.is_locked && neighbor->is_locked)
+            {
+                continue;
+            }
+
+            float distance_sq = utils::distance_sq(object.position, neighbor->position);
+
+            if (distance_sq < 0.01f)
+            {
+                sf::Vector2f position_diff = neighbor->position - object.position;
+                neighbor->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
+                continue;
+            }
+
+            float radius_sum = object.radius + neighbor->radius;
+
+            if (distance_sq >= radius_sum * radius_sum)
+            {
+                continue;
+            }
+
+            float distance = std::sqrt(distance_sq);
+
+            sf::Vector2f collision_normal = (object.position - neighbor->position) / distance;
+            float inward_velocity = utils::dot_product(object.velocity - neighbor->velocity, collision_normal);
+
+            float overlap = radius_sum - distance;
+
+            if (object.is_locked)
+            {
+                neighbor->position -= collision_normal * overlap;
+                if (inward_velocity < 0)
+                {
+                    neighbor->velocity += collision_normal * inward_velocity;
+                }
+            }
+            else if (neighbor->is_locked)
+            {
+                object.position += collision_normal * overlap;
+                if (inward_velocity < 0)
+                {
+                    object.velocity -= collision_normal * inward_velocity;
+                }
+            }
+            else
+            {
+                float mass_ratio = object.mass / (object.mass + neighbor->mass);
+                object.position += collision_normal * overlap * mass_ratio;
+                neighbor->position -= collision_normal * overlap * (1.0f - mass_ratio);
+                if (inward_velocity < 0)
+                {
+                    object.velocity -= collision_normal * inward_velocity * mass_ratio;
+                    neighbor->velocity += collision_normal * inward_velocity * (1.0f - mass_ratio);
+                }
+            }
+        }
         if (object.position.x - object.radius < min_x)
         {
             object.position.x = min_x + object.radius;

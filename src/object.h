@@ -4,8 +4,6 @@
 
 #include <SFML/Graphics.hpp>
 
-constexpr size_t CIRCLE_DRAW_SEGMENTS = 20;
-
 struct Object
 {
 public:
