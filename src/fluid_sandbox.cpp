@@ -1,9 +1,9 @@
+#include <algorithm>
+#include <cmath>
+
 #include "fluid_sandbox.h"
 #include "utils.h"
 #include "controls.h"
-
-#include <algorithm>
-#include <cmath>
 
 void FluidSandbox::clear_particles()
 {
@@ -49,7 +49,6 @@ void FluidSandbox::push_particles(sf::Vector2f velocity)
 void FluidSandbox::update(float dt)
 {
     dt_ = std::min(dt * params_.simulation_speed, 1.0f); // to prevent instability
-    frame_rate_ = 1.0f / dt;
     move_particles();
     update_neighbors();
     adjust_apply_strings();
@@ -377,103 +376,7 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
             particle_vertices[i * 6 + j].color = particle_color;
         }
     }
-    auto sidebar = sf::RectangleShape({static_cast<float>(SIDEBAR_SIZE), static_cast<float>(size_.y)});
-    sidebar.setPosition({static_cast<float>(size_.x), 0.0f});
-
-    sidebar.setFillColor(sf::Color(192, 192, 192));
 
     states.blendMode = sf::BlendMax;
     target.draw(particle_vertices, states);
-    states.blendMode = sf::BlendAlpha;
-    target.draw(sidebar, states);
-
-    sf::Text text(font_);
-    text.setCharacterSize(FONT_SIZE);
-    text.setFillColor(sf::Color::Black);
-
-    float current_y = 10.0f;
-    const float x_pos = static_cast<float>(size_.x) + 10.0f;
-    const float line_height_multiplier = 1.3f;
-    const float line_spacing = static_cast<float>(FONT_SIZE) * line_height_multiplier;
-    const float section_spacing = line_spacing * 0.5f;
-
-    auto draw_text_line = [&](const std::string &str_content, bool is_underlined = false)
-    {
-        text.setString(str_content);
-        text.setPosition({x_pos, current_y});
-        if (is_underlined)
-        {
-            text.setStyle(sf::Text::Underlined);
-        }
-        else
-        {
-            text.setStyle(sf::Text::Regular);
-        }
-        target.draw(text, states);
-        current_y += line_spacing;
-    };
-
-    auto draw_info_line = [&](const std::string &name, float value)
-    {
-        std::stringstream ss;
-        ss << name << ": " << std::round(value * 100) / 100.0f;
-        draw_text_line(ss.str());
-    };
-
-    auto draw_param_info_line = [&](const std::string &name, char key, float default_value, float value)
-    {
-        std::stringstream ss;
-        ss << name << " (key: " << key << ", default: " << std::round(default_value * 100) / 100.0f << ")"
-           << ": " << std::round(value * 100) / 100.0f;
-        draw_text_line(ss.str());
-    };
-
-    draw_text_line("Runtime Stats", true);
-    current_y += section_spacing;
-
-    draw_info_line("Particles", particles_.size());
-    draw_info_line("Frame Rate", frame_rate_);
-
-    current_y += section_spacing;
-    draw_text_line("Controls", true);
-    current_y += section_spacing;
-
-    draw_text_line("<key> & '+' or '-' to Adjust Param");
-    draw_text_line("S - Spawn Particles");
-    draw_text_line("D - Delete Particles");
-    draw_text_line("Space - Clear Particles");
-
-    current_y += section_spacing;
-    draw_text_line("Simulation Params", true);
-    current_y += section_spacing;
-
-    draw_param_info_line("Sim Speed", SIMULATION_SPEED_KEY, SIMULATION_SPEED_DEFAULT, params_.simulation_speed);
-    draw_param_info_line("Gravity X", GRAVITY_X_KEY, GRAVITY_X_DEFAULT, params_.gravity_x);
-    draw_param_info_line("Gravity Y", GRAVITY_Y_KEY, GRAVITY_Y_DEFAULT, params_.gravity_y);
-    draw_param_info_line("Edge Bounciness", EDGE_BOUNCINESS_KEY, EDGE_BOUNCINESS_DEFAULT, params_.edge_bounciness);
-    draw_param_info_line("Interaction Radius", INTERACTION_RADIUS_KEY, INTERACTION_RADIUS_DEFAULT, params_.interaction_radius);
-    draw_param_info_line("Rest Density", REST_DENSITY_KEY, REST_DENSITY_DEFAULT, params_.rest_density);
-    draw_param_info_line("Stiffness", STIFFNESS_KEY, STIFFNESS_DEFAULT, params_.stiffness);
-    draw_param_info_line("Near Stiffness", NEAR_STIFFNESS_KEY, NEAR_STIFFNESS_DEFAULT, params_.near_stiffness);
-    draw_param_info_line("Linear Viscosity", LINEAR_VISCOSITY_KEY, LINEAR_VISCOSITY_DEFAULT, params_.linear_viscosity);
-    draw_param_info_line("Quad Viscosity", QUADRATIC_VISCOSITY_KEY, QUADRATIC_VISCOSITY_DEFAULT, params_.quadratic_viscosity);
-    draw_param_info_line("Plasticity", PLASTICITY_KEY, PLASTICITY_DEFAULT, params_.plasticity);
-    draw_param_info_line("Yield Ratio", YIELD_RATIO_KEY, YIELD_RATIO_DEFAULT, params_.yield_ratio);
-    draw_param_info_line("Spring Stiffness", SPRING_STIFFNESS_KEY, SPRING_STIFFNESS_DEFAULT, params_.spring_stiffness);
-
-    current_y += section_spacing;
-    draw_text_line("Controls Params", true);
-    current_y += section_spacing;
-
-    draw_param_info_line("Control Radius", CONTROL_RADIUS_KEY, CONTROL_RADIUS_DEFAULT, params_.control_radius);
-    draw_param_info_line("Spawn Rate", PARTICLE_SPAWN_RATE_KEY, PARTICLE_SPAWN_RATE_DEFAULT, params_.particle_spawn_rate);
-
-    current_y += section_spacing;
-    draw_text_line("Visuals Params", true);
-    current_y += section_spacing;
-
-    draw_param_info_line("Base Size", BASE_PARTICLE_SIZE_KEY, BASE_PARTICLE_SIZE_DEFAULT, params_.base_particle_size);
-    draw_param_info_line("Stress Size Mult", PARTICLE_STRESS_SIZE_MULTIPLIER_KEY, PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT, params_.particle_stress_size_multiplier);
-    draw_param_info_line("Base Color", BASE_PARTICLE_COLOR_KEY, BASE_PARTICLE_COLOR_DEFAULT, params_.base_particle_color);
-    draw_param_info_line("Stress Color Mult", PARTICLE_STRESS_COLOR_MULTIPLIER_KEY, PARTICLE_STRESS_COLOR_MULTIPLIER_DEFAULT, params_.particle_stress_color_multiplier);
 }
