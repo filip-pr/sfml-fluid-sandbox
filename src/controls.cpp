@@ -53,13 +53,13 @@ ControlsDisplay::ControlsDisplay(FluidSandbox &sandbox, unsigned int width) : sa
     params_.emplace_back(Param{"Edge Bounciness", '4', EDGE_BOUNCINESS_DEFAULT, sandbox_.params().edge_bounciness, 0.5f, 0.0f, 1.0f});
     params_.emplace_back(Param{"Interaction Radius", '5', INTERACTION_RADIUS_DEFAULT, sandbox_.params().interaction_radius, 20.0f, 0.0f});
     params_.emplace_back(Param{"Rest Density", '6', REST_DENSITY_DEFAULT, sandbox_.params().rest_density, 0.1f, 0.0f, 10.0f});
-    params_.emplace_back(Param{"Stiffness", '7', STIFFNESS_DEFAULT, sandbox_.params().stiffness, 0.5f, 0.0f});
-    params_.emplace_back(Param{"Near Stiffness", '8', NEAR_STIFFNESS_DEFAULT, sandbox_.params().near_stiffness, 0.5f, 0.0f});
+    params_.emplace_back(Param{"Stiffness", '7', STIFFNESS_DEFAULT, sandbox_.params().stiffness, 0.5f, 0.0f, 1.0f});
+    params_.emplace_back(Param{"Near Stiffness", '8', NEAR_STIFFNESS_DEFAULT, sandbox_.params().near_stiffness, 0.5f, 0.0f, 1.0f});
     params_.emplace_back(Param{"Linear Viscosity", '9', LINEAR_VISCOSITY_DEFAULT, sandbox_.params().linear_viscosity, 0.5f, 0.0f});
     params_.emplace_back(Param{"Quad Viscosity", '0', QUADRATIC_VISCOSITY_DEFAULT, sandbox_.params().quadratic_viscosity, 0.5f, 0.0f});
-    params_.emplace_back(Param{"Plasticity", 'Q', PLASTICITY_DEFAULT, sandbox_.params().plasticity, 0.5f, 0.0f, 1.0f});
+    params_.emplace_back(Param{"Plasticity", 'Q', PLASTICITY_DEFAULT, sandbox_.params().plasticity, 0.5f, 0.2f, 1.0f});
     params_.emplace_back(Param{"Yield Ratio", 'W', YIELD_RATIO_DEFAULT, sandbox_.params().yield_ratio, 0.2f, 0.0f, 1.0f});
-    params_.emplace_back(Param{"Spring Stiffness", 'E', SPRING_STIFFNESS_DEFAULT, sandbox_.params().spring_stiffness, 0.5f, 0.0f});
+    params_.emplace_back(Param{"Spring Stiffness", 'E', SPRING_STIFFNESS_DEFAULT, sandbox_.params().spring_stiffness, 0.5f, 0.0f, 1.0f});
     params_.emplace_back(Param{"Control Radius", 'R', CONTROL_RADIUS_DEFAULT, sandbox_.params().control_radius, 50.0f, 0.01f});
     params_.emplace_back(Param{"Spawn Rate", 'T', PARTICLE_SPAWN_RATE_DEFAULT, sandbox_.params().particle_spawn_rate, 5.0f, 0.01f});
     params_.emplace_back(Param{"Base Size", 'Y', BASE_PARTICLE_SIZE_DEFAULT, sandbox_.params().base_particle_size, 5.0f, 0.0f});

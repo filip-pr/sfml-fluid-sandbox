@@ -85,7 +85,7 @@ void FluidSandbox::update_neighbors()
 
 void FluidSandbox::adjust_apply_strings()
 {
-    if (params_.spring_stiffness == 0.0f || params_.plasticity == 0.0f)
+    if (params_.spring_stiffness == 0.0f)
         return;
 
     const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;

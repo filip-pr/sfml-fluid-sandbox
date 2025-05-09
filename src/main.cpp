@@ -7,7 +7,7 @@ constexpr char const WINDOW_TITLE[] = "Fluid Simulation Sandbox";
 
 constexpr unsigned int DEFAULT_WINDOW_WIDTH = 1500;
 constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 800;
-constexpr unsigned int SIDEBAR_WIDTH = 350;
+constexpr unsigned int SIDEBAR_WIDTH = 300;
 
 constexpr size_t FRAME_RATE_LIMIT = 100;
 
