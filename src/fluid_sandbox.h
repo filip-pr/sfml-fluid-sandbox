@@ -204,7 +204,7 @@ private:
     void do_double_density_relaxation();
 
     /**
-     * @brief Resolves collisions between particles, objects and simulation boundaries.
+     * @brief Resolves collisions between particles, objects and simulation boundaries (Implementation of algorithm 6, section 6. Collisions).
      */
     void resolve_collisions();
 

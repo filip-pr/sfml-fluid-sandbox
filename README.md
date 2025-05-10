@@ -1,6 +1,6 @@
 # Fluid Simulation Sandbox
 
-This project is a partial 2D realtime particle-based fluid simulation sandbox implemented in C++. It simulates viscoelastic fluids based on the principles outlined in the paper [Particle-based viscoelastic fluid simulation by Simon Clavet, Philippe Beaudoin, and Pierre Poulin](https://dl.acm.org/doi/10.1145/1073368.1073400).
+This project is a partial 2D realtime particle-based fluid simulation sandbox implemented in C++. It simulates viscoelastic fluids based on the principles from the paper [Particle-based viscoelastic fluid simulation by Simon Clavet, Philippe Beaudoin, and Pierre Poulin](https://dl.acm.org/doi/10.1145/1073368.1073400).
 
 ## Features
 

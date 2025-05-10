@@ -56,11 +56,10 @@ void FluidSandbox::remove_particles(sf::Vector2f position)
 
 void FluidSandbox::remove_object(sf::Vector2f position)
 {
-    float radius_sq = params_.control_radius * params_.control_radius;
     auto it = std::remove_if(objects_.begin(), objects_.end(),
-                             [position, radius_sq](const Object &object)
+                             [position](const Object &object)
                              {
-                                 return utils::distance_sq(object.position, position) < radius_sq;
+                                 return utils::distance_sq(object.position, position) < object.radius * object.radius;
                              });
     objects_.erase(it, objects_.end());
 }
@@ -116,6 +115,7 @@ void FluidSandbox::move_everything()
     for (auto &&object : objects_)
     {
         object.update(dt_);
+        object.velocity_buffer = {0.0f, 0.0f};
         if (object.radius > max_object_radius)
         {
             max_object_radius = object.radius;
@@ -340,6 +340,44 @@ void FluidSandbox::resolve_collisions()
         }
     }
 
+    // Particle object collisions
+    for (auto &object : objects_)
+    {
+        if (object.is_locked)
+        {
+            continue;
+        }
+
+        auto coliding_particles = particle_grid_.query(object.position, object.radius);
+
+        for (auto particle : coliding_particles)
+        {
+
+            float distance_sq = utils::distance_sq(object.position, particle->position);
+
+            if (distance_sq < 0.01f)
+            {
+                sf::Vector2f position_diff = particle->position - object.position;
+                particle->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
+                continue;
+            }
+
+            float distance = std::sqrt(distance_sq);
+
+            sf::Vector2f collision_normal = (object.position - particle->position) / distance;
+
+            float inward_velocity = utils::dot_product(object.velocity - particle->velocity, collision_normal);
+
+            if (inward_velocity < 0)
+            {
+                float mass_ratio = object.mass / (object.mass + 1.0f); // Particle mass is implicitly 1.0f
+                object.velocity_buffer -= collision_normal * inward_velocity * mass_ratio / object.mass;
+            }
+        }
+        object.velocity += object.velocity_buffer;
+        object.position = object.previous_position + object.velocity * dt_;
+    }
+
     // Inter object and object boundary collisions
     for (auto &&object : objects_)
     {
@@ -422,6 +460,41 @@ void FluidSandbox::resolve_collisions()
         {
             object.position.y = max_y - object.radius;
             object.velocity.y *= -params_.edge_bounciness;
+        }
+    }
+    
+    // Object particle collisions
+    for (auto &object : objects_)
+    {
+        auto coliding_particles = particle_grid_.query(object.position, object.radius);
+
+        for (auto particle : coliding_particles)
+        {
+
+            float distance_sq = utils::distance_sq(object.position, particle->position);
+
+            if (distance_sq < 0.01f)
+            {
+                sf::Vector2f position_diff = particle->position - object.position;
+                particle->position += {position_diff.x > 0 ? 0.1f : -0.1f, position_diff.y > 0 ? 0.1f : -0.1f};
+                continue;
+            }
+
+            float distance = std::sqrt(distance_sq);
+
+            sf::Vector2f collision_normal = (object.position - particle->position) / distance;
+
+            float inward_velocity = utils::dot_product(object.velocity - particle->velocity, collision_normal);
+
+            if (inward_velocity < 0)
+            {
+                float mass_ratio = object.mass / (object.mass + 1.0f); // Particle mass is implicitly 1.0f
+                particle->velocity += collision_normal * inward_velocity * (1.0f - mass_ratio);
+            }
+            float overlap = object.radius - distance;
+
+            particle->position -= collision_normal * overlap;
+
         }
     }
 }

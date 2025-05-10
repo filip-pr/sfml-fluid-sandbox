@@ -10,9 +10,12 @@ struct Object
 {
 public:
     sf::Vector2f position;
+    sf::Vector2f previous_position;
     float radius;
     float mass;
     sf::Vector2f velocity;
+    sf::Vector2f velocity_buffer;
+
     bool is_locked = false;
 
     /**
@@ -34,6 +37,7 @@ public:
     {
         if (!is_locked)
         {
+            previous_position = position;
             position += velocity * dt;
         }
     }
