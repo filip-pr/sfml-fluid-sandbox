@@ -44,7 +44,24 @@ void Param::update(float dt)
 
 ControlsDisplay::ControlsDisplay(FluidSandbox &sandbox, unsigned int width) : sandbox_(sandbox), width_(width)
 {
-    if (!font_.openFromFile(FONT_PATH))
+    std::string font_path; // To allow for running from different directories
+    if (std::filesystem::exists(FONT_PATH_FROM_BUILD))
+    {
+        font_path = FONT_PATH_FROM_BUILD;
+    }
+    else if (std::filesystem::exists(FONT_PATH_FROM_SOURCE))
+    {
+        font_path = FONT_PATH_FROM_SOURCE;
+    }
+    else if (std::filesystem::exists(FONT_PATH_FROM_PROJECT))
+    {
+        font_path = FONT_PATH_FROM_PROJECT;
+    }
+    else
+    {
+        throw std::runtime_error("Font file not found");
+    }
+    if (!font_.openFromFile(font_path))
     {
         throw std::runtime_error("Failed to load font");
     }
@@ -53,9 +70,9 @@ ControlsDisplay::ControlsDisplay(FluidSandbox &sandbox, unsigned int width) : sa
     params_.emplace_back(Param{"Gravity Y", '3', GRAVITY_Y_DEFAULT, sandbox_.params().gravity_y, 0.5f});
     params_.emplace_back(Param{"Edge Bounciness", '4', EDGE_BOUNCINESS_DEFAULT, sandbox_.params().edge_bounciness, 0.5f, 0.0f, 1.0f});
     params_.emplace_back(Param{"Interaction Radius", '5', INTERACTION_RADIUS_DEFAULT, sandbox_.params().interaction_radius, 20.0f, 0.0f});
-    params_.emplace_back(Param{"Rest Density", '6', REST_DENSITY_DEFAULT, sandbox_.params().rest_density, 0.1f, 0.0f, 10.0f});
-    params_.emplace_back(Param{"Stiffness", '7', STIFFNESS_DEFAULT, sandbox_.params().stiffness, 0.5f, 0.0f, 1.0f});
-    params_.emplace_back(Param{"Near Stiffness", '8', NEAR_STIFFNESS_DEFAULT, sandbox_.params().near_stiffness, 0.5f, 0.0f, 1.0f});
+    params_.emplace_back(Param{"Rest Density", '6', REST_DENSITY_DEFAULT, sandbox_.params().rest_density, 5.0f, 0.0f, 10.0f});
+    params_.emplace_back(Param{"Stiffness", '7', STIFFNESS_DEFAULT, sandbox_.params().stiffness, 0.5f, 0.0f});
+    params_.emplace_back(Param{"Near Stiffness", '8', NEAR_STIFFNESS_DEFAULT, sandbox_.params().near_stiffness, 0.5f, 0.0f});
     params_.emplace_back(Param{"Linear Viscosity", '9', LINEAR_VISCOSITY_DEFAULT, sandbox_.params().linear_viscosity, 0.5f, 0.0f});
     params_.emplace_back(Param{"Quad Viscosity", '0', QUADRATIC_VISCOSITY_DEFAULT, sandbox_.params().quadratic_viscosity, 0.5f, 0.0f});
     params_.emplace_back(Param{"Plasticity", 'Q', PLASTICITY_DEFAULT, sandbox_.params().plasticity, 0.5f, 0.2f, 1.0f});
@@ -112,7 +129,6 @@ void ControlsDisplay::draw_info(const Param &param, sf::RenderTarget &target, sf
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
 }
 
-
 void ControlsDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
     sf::RectangleShape sidebar_bg({static_cast<float>(width_), static_cast<float>(target.getSize().y)});
@@ -131,7 +147,7 @@ void ControlsDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) co
 
     draw_info("Particles", static_cast<float>(sandbox_.particle_count()), target, text_template, y_offset);
     draw_info("Objects", static_cast<float>(sandbox_.object_count()), target, text_template, y_offset);
-    draw_info("Frame Rate", 1/dt_, target, text_template, y_offset);
+    draw_info("Frame Rate", 1 / dt_, target, text_template, y_offset);
 
     y_offset += static_cast<float>(FONT_SIZE) * LINE_SPACING;
     draw_text("Controls", sf::Text::Bold, target, text_template, y_offset);
@@ -154,6 +170,4 @@ void ControlsDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) co
     {
         draw_info(param, target, text_template, y_offset);
     }
-
-
 }

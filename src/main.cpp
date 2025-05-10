@@ -26,6 +26,7 @@ int main()
 
     while (window.isOpen())
     {
+        // Window events handling
         while (const std::optional event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
@@ -38,6 +39,8 @@ int main()
                 sandbox.resize({(resized->size.x > SIDEBAR_WIDTH ? resized->size.x - SIDEBAR_WIDTH : 0), resized->size.y});
             }
         }
+
+        // Keyboard and mouse input handling
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
         {
             const auto mouse_position = sf::Mouse::getPosition(window);
@@ -58,7 +61,7 @@ int main()
             const auto mouse_position = sf::Mouse::getPosition(window);
             sandbox.remove_object(static_cast<sf::Vector2f>(mouse_position));
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) // Only lock / unlock objects on key release
         {
             lock_pressed = true;
         }

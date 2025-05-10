@@ -14,7 +14,7 @@ void FluidSandbox::clear()
 void FluidSandbox::add_particles(sf::Vector2f position)
 {
     size_t num_new_particles = static_cast<size_t>(params_.particle_spawn_rate * dt_);
-    if (num_new_particles == 0)
+    if (num_new_particles == 0) // If the whole number of particles is 0, we spawn one on random chance
     {
         num_new_particles = static_cast<float>(rand()) / RAND_MAX < params_.particle_spawn_rate * dt_ ? 1 : 0;
     }
@@ -30,10 +30,15 @@ void FluidSandbox::add_particles(sf::Vector2f position)
 
 void FluidSandbox::add_object(sf::Vector2f position)
 {
-    auto coliding_objects = object_grid_.query(position, max_object_radius + params_.object_radius);
-    if (coliding_objects.size() > 0)
+    // Only spawn new object if it doesn't collide with any existing object
+    auto neighbors = object_grid_.query(position, max_object_radius + params_.object_radius);
+    for (auto &&neighbor : neighbors)
     {
-        return;
+        float radius_sum = neighbor->radius + params_.object_radius;
+        if (utils::distance_sq(neighbor->position, position) < radius_sum * radius_sum)
+        {
+            return;
+        }
     }
     objects_.emplace_back(position, params_.object_radius, params_.object_mass);
 }
@@ -62,12 +67,13 @@ void FluidSandbox::remove_object(sf::Vector2f position)
 
 void FluidSandbox::toggle_lock_object(sf::Vector2f position)
 {
-    float radius_sq = params_.control_radius * params_.control_radius;
+    auto neighbors = object_grid_.query(position, max_object_radius + params_.object_radius);
     for (auto &&object : objects_)
     {
+        float radius_sq = object.radius * object.radius;
         if (utils::distance_sq(object.position, position) < radius_sq)
         {
-            object.is_locked = !object.is_locked;
+            object.toggle_lock();
         }
     }
 }
@@ -86,7 +92,7 @@ void FluidSandbox::push_everything(sf::Vector2f velocity)
 
 void FluidSandbox::update(float dt)
 {
-    dt_ = std::min(dt * params_.simulation_speed, 1.0f); // to prevent instability
+    dt_ = std::min(dt * params_.simulation_speed, 1.0f); // to prevent instability (some calculations use higher power of dt)
     move_everything();
     update_neighbors();
     adjust_apply_strings();
@@ -95,7 +101,7 @@ void FluidSandbox::update(float dt)
     recalculate_velocity();
     apply_gravity();
     apply_viscosity();
-    reverse_calculation_order_ = !reverse_calculation_order_;
+    reverse_calculation_order_ = !reverse_calculation_order_; // Reverse the order of calculations for better stability
 }
 
 void FluidSandbox::move_everything()
@@ -134,9 +140,10 @@ void FluidSandbox::update_neighbors()
 
 void FluidSandbox::adjust_apply_strings()
 {
-    if (params_.spring_stiffness == 0.0f)
+    if (params_.spring_stiffness == 0.0f) // If spring stiffness is 0, no forces would be applied anyway
         return;
 
+    // Precalculating some values for efficiency
     const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
     const float inv_interaction_radius = 1.0f / params_.interaction_radius;
     const float dt_plasticity = params_.plasticity * dt_;
@@ -210,6 +217,7 @@ void FluidSandbox::adjust_apply_strings()
 
 void FluidSandbox::do_double_density_relaxation()
 {
+    // Precalculating some values for efficiency
     const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
     const float inv_interaction_radius = 1.0f / params_.interaction_radius;
     const float dt_sq_half = 0.5f * dt_ * dt_;
@@ -298,6 +306,7 @@ void FluidSandbox::resolve_collisions()
     const float min_y = 0;
     const float max_y = static_cast<float>(size_.y);
 
+    // Particle boundary collisions
     for (auto &&particle : particles_)
     {
         if (particle.position.x < min_x)
@@ -331,6 +340,7 @@ void FluidSandbox::resolve_collisions()
         }
     }
 
+    // Inter object and object boundary collisions
     for (auto &&object : objects_)
     {
         auto neighbors = object_grid_.query(object.position, object.radius + max_object_radius);
@@ -441,9 +451,10 @@ void FluidSandbox::apply_gravity()
 
 void FluidSandbox::apply_viscosity()
 {
-    if (params_.linear_viscosity == 0.0f && params_.quadratic_viscosity == 0.0f)
+    if (params_.linear_viscosity == 0.0f && params_.quadratic_viscosity == 0.0f) // If both viscosities are 0, no forces would be applied anyway
         return;
 
+    // Precalculating some values for efficiency
     const float interaction_radius_sq = params_.interaction_radius * params_.interaction_radius;
     const float inv_interaction_radius = 1.0f / params_.interaction_radius;
     const float dt_half = 0.5f * dt_;
@@ -495,6 +506,7 @@ void FluidSandbox::apply_viscosity()
 
 void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+    // Draw particles as squares
     sf::VertexArray particle_vertices(sf::PrimitiveType::Triangles, particles_.size() * 6);
     for (size_t i = 0; i < particles_.size(); i++)
     {
@@ -519,6 +531,7 @@ void FluidSandbox::draw(sf::RenderTarget &target, sf::RenderStates states) const
     target.draw(particle_vertices, states);
     states.blendMode = sf::BlendAlpha;
 
+    // Draw objects as circles
     sf::VertexArray object_vertices(sf::PrimitiveType::Triangles, objects_.size() * CIRCLE_DRAW_SEGMENTS * 3);
 
     for (size_t i = 0; i < objects_.size(); ++i)
