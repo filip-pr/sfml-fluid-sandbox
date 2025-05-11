@@ -5,7 +5,6 @@
 #include "utils.h"
 #include "controls.h"
 
-#include <iostream>
 
 void FluidSandbox::clear()
 {
