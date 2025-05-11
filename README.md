@@ -21,7 +21,7 @@ This project is a partial 2D realtime particle-based fluid simulation sandbox im
 1.  **Clone the repository (if you haven't already):**
     ```bash
     git clone https://gitlab.mff.cuni.cz/teaching/nprg041/2024-25/svoboda-cze-1220/prasilfi.git
-    cd project
+    cd prasilfi/project
     ```
 
 2.  **Install SFML dependencies:**
