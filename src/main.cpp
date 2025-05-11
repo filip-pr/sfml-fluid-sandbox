@@ -8,10 +8,12 @@
 constexpr char const WINDOW_TITLE[] = "Fluid Simulation Sandbox";
 
 constexpr unsigned int DEFAULT_WINDOW_WIDTH = 1500;
-constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 800;
+constexpr unsigned int DEFAULT_WINDOW_HEIGHT = 900;
 constexpr unsigned int SIDEBAR_WIDTH = 300;
 
 constexpr size_t FRAME_RATE_LIMIT = 100;
+
+constexpr float WINDOW_MOVE_STRENGTH = 0.1f;
 
 int main()
 {
@@ -80,22 +82,10 @@ int main()
                 sandbox.clear();
             }
         }
-        else
-        {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) // set the lock / unlock state of the grabbed object
-            {
-                lock_pressed = true;
-            }
-            else if (lock_pressed)
-            {
-                lock_pressed = false;
-                grabbed_object_locked = !grabbed_object_locked;
-            }
-        }
 
         if (window_position != new_window_position)
         {
-            sandbox.push_everything(static_cast<sf::Vector2f>(window_position - new_window_position) / 10.0f);
+            sandbox.push_everything(static_cast<sf::Vector2f>(window_position - new_window_position) * WINDOW_MOVE_STRENGTH);
             window_position = new_window_position;
         }
         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))

@@ -155,6 +155,7 @@ void ControlsDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) co
 
     draw_text("<key> & '+' or '-' to Adjust Param", sf::Text::Regular, target, text_template, y_offset);
     draw_text("<key> & 'backspace' to Reset Param", sf::Text::Regular, target, text_template, y_offset);
+    draw_text("LMB to Grab and Move Objects", sf::Text::Regular, target, text_template, y_offset);
     draw_text("D - Spawn Particles", sf::Text::Regular, target, text_template, y_offset);
     draw_text("F - Delete Particles", sf::Text::Regular, target, text_template, y_offset);
     draw_text("G - Spawn an Object", sf::Text::Regular, target, text_template, y_offset);
