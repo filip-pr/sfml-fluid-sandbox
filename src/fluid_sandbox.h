@@ -7,6 +7,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <algorithm>
+#include <optional>
 
 #include "particle.h"
 #include "object.h"
@@ -26,7 +27,7 @@ inline constexpr float PLASTICITY_DEFAULT = 0.2f;
 inline constexpr float YIELD_RATIO_DEFAULT = 0.2f;
 inline constexpr float SPRING_STIFFNESS_DEFAULT = 0.0f;
 inline constexpr float CONTROL_RADIUS_DEFAULT = 50.0f;
-inline constexpr float OBJECT_RADIUS_DEFAULT = 30.0f;
+inline constexpr float OBJECT_RADIUS_DEFAULT = 100.0f;
 inline constexpr float OBJECT_MASS_DEFAULT = 10.0f;
 inline constexpr float PARTICLE_SPAWN_RATE_DEFAULT = 3.0f;
 inline constexpr float BASE_PARTICLE_SIZE_DEFAULT = 5.0f;
@@ -34,7 +35,7 @@ inline constexpr float PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT = 7.0f;
 inline constexpr float BASE_PARTICLE_COLOR_DEFAULT = 255.0f;
 inline constexpr float PARTICLE_STRESS_COLOR_MULTIPLIER_DEFAULT = 125.0f;
 
-constexpr size_t CIRCLE_DRAW_SEGMENTS = 20;
+constexpr size_t CIRCLE_DRAW_SEGMENTS = 30;
 
 /**
  * @brief Structure holding all tunable parameters for the fluid simulation.
@@ -145,6 +146,13 @@ public:
      * @param position The position of the object to toggle.
      */
     void toggle_lock_object(sf::Vector2f position);
+
+    /**
+     * @brief Attempts to grab an object at a given position.
+     * @param position The position to check for an object.
+     * @return An optional pointer to the grabbed object, or nullopt if no object was found.
+     */
+    std::optional<Object *> try_grab_object(sf::Vector2f position);
 
     /**
      * @brief Pushes all particles and objects in a given direction.

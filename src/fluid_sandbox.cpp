@@ -77,6 +77,20 @@ void FluidSandbox::toggle_lock_object(sf::Vector2f position)
     }
 }
 
+std::optional<Object *> FluidSandbox::try_grab_object(sf::Vector2f position)
+{
+    auto it = std::find_if(objects_.begin(), objects_.end(),
+                           [position](const Object &object)
+                           {
+                               return utils::distance_sq(object.position, position) < object.radius * object.radius;
+                           });
+    if (it != objects_.end())
+    {
+        return &(*it);
+    }
+    return std::nullopt;
+}
+
 void FluidSandbox::push_everything(sf::Vector2f velocity)
 {
     for (auto &&particle : particles_)
@@ -440,6 +454,12 @@ void FluidSandbox::resolve_collisions()
                 }
             }
         }
+
+        if (object.is_locked)
+        {
+            continue;
+        }
+
         if (object.position.x - object.radius < min_x)
         {
             object.position.x = min_x + object.radius;
@@ -462,7 +482,7 @@ void FluidSandbox::resolve_collisions()
             object.velocity.y *= -params_.edge_bounciness;
         }
     }
-    
+
     // Object particle collisions
     for (auto &object : objects_)
     {
@@ -494,7 +514,6 @@ void FluidSandbox::resolve_collisions()
             float overlap = object.radius - distance;
 
             particle->position -= collision_normal * overlap;
-
         }
     }
 }
