@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "controls.h"
 
+#include <iostream>
+
 void FluidSandbox::clear()
 {
     particles_.clear();
@@ -387,6 +389,8 @@ void FluidSandbox::resolve_collisions()
                 float mass_ratio = object.mass / (object.mass + 1.0f); // Particle mass is implicitly 1.0f
                 object.velocity_buffer -= collision_normal * inward_velocity * mass_ratio / object.mass;
             }
+            // sqrt here is necessary to prevent particles too much inside the object to push it too much
+            object.velocity_buffer += collision_normal * std::sqrt(object.radius - distance) / object.mass;
         }
         object.velocity += object.velocity_buffer;
         object.position = object.previous_position + object.velocity * dt_;
@@ -511,9 +515,7 @@ void FluidSandbox::resolve_collisions()
                 float mass_ratio = object.mass / (object.mass + 1.0f); // Particle mass is implicitly 1.0f
                 particle->velocity += collision_normal * inward_velocity * (1.0f - mass_ratio);
             }
-            float overlap = object.radius - distance;
-
-            particle->position -= collision_normal * overlap;
+            particle->position -= collision_normal * (object.radius - distance);
         }
     }
 }

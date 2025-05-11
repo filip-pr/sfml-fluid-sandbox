@@ -81,7 +81,7 @@ ControlsDisplay::ControlsDisplay(FluidSandbox &sandbox, unsigned int width) : sa
     params_.emplace_back(Param{"Control Radius", 'R', CONTROL_RADIUS_DEFAULT, sandbox_.params().control_radius, 50.0f, 0.01f});
     params_.emplace_back(Param{"Spawn Rate", 'T', PARTICLE_SPAWN_RATE_DEFAULT, sandbox_.params().particle_spawn_rate, 5.0f, 0.01f});
     params_.emplace_back(Param{"Object Radius", 'Y', OBJECT_RADIUS_DEFAULT, sandbox_.params().object_radius, 50.0f, 0.01f});
-    params_.emplace_back(Param{"Object Mass", 'U', OBJECT_MASS_DEFAULT, sandbox_.params().object_mass, 50.0f, 0.01f});
+    params_.emplace_back(Param{"Object Mass", 'U', OBJECT_MASS_DEFAULT, sandbox_.params().object_mass, 5.0f, 0.01f});
     params_.emplace_back(Param{"Base Size", 'I', BASE_PARTICLE_SIZE_DEFAULT, sandbox_.params().base_particle_size, 5.0f, 0.0f});
     params_.emplace_back(Param{"Stress Size Mult", 'O', PARTICLE_STRESS_SIZE_MULTIPLIER_DEFAULT, sandbox_.params().particle_stress_size_multiplier, 5.0f, 0.0f});
     params_.emplace_back(Param{"Base Color", 'P', BASE_PARTICLE_COLOR_DEFAULT, sandbox_.params().base_particle_color, 50.0f, 0.0f});
