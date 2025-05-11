@@ -70,7 +70,7 @@ Some parameters are pretty self explanatory, some are a little magic, you can re
 *   **`Rest Density`**: The target density the simulation tries to maintain for the fluid, also a bit magic (higher value = particles are closer).
 *   **`Stiffness`**: Very magic, it makes the low/high density forces stronger, making the particles more strictly distanced (higher value = the fluid is less compressible and 'splashy').
 *   **`Near Stiffness`**: Very magic, same as stiffness but for closer particle distances (higher value = the fluid is less compressible and 'splashy').
-*   **`Linear Viscosit`**: Controls the fluid's resistance to flow, proportional to the relative velocity of neighboring particles (higher value = thicker fluid).
+*   **`Linear Viscosity`**: Controls the fluid's resistance to flow, proportional to the relative velocity of neighboring particles (higher value = thicker fluid).
 *   **`Quadratic Viscosity`**: Similar to linear viscosity, but the force is proportional to the square of the relative velocity. This can help dampen fast motions more strongly (higher value = thicker fluid).
 *   **`Plasticity`**: Part of the viscoelastic model. Allows the fluid to exhibit plastic behavior (higher value = harder to deform the 'fluid').
 *   **`Yield Ratio`**: Defines the elastic limit for springs (higher values = harder to 'permanently' deform the 'fluid').
