@@ -18,7 +18,7 @@ This project is a partial 2D realtime particle-based fluid simulation sandbox im
 
 ### Build Steps
 
-1.  **Clone the repository (if you haven't already):**
+1.  **Clone the repository and navigate to the project folder:**
     ```bash
     git clone https://gitlab.mff.cuni.cz/teaching/nprg041/2024-25/svoboda-cze-1220/prasilfi.git
     cd prasilfi/project
